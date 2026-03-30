@@ -11,7 +11,6 @@ user_router=APIRouter()
 def get_users(db:Session=Depends(get_db),current_user: User = Depends(get_current_user)):
     #get all the users from data base
     users=db.query(User).all()
-
     if not users:
         raise HTTPException (status_code=status.HTTP_400_BAD_REQUEST,detail="No User is present in database !")
 
