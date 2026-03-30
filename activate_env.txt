@@ -1,0 +1,11 @@
+Script 1:
+    powershell -ExecutionPolicy Bypass -File .\.venv\Scripts\Activate.ps1
+Script 2:
+   .\.venv\Scripts\Activate.ps1
+
+   {
+  "id": 0,
+  "username": "ehtisham",
+  "email": "ehtishamexp@gmail.com",
+  "password": Ehti@123
+}
