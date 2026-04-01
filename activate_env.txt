@@ -9,3 +9,6 @@ Script 2:
   "email": "ehtishamexp@gmail.com",
   "password": Ehti@123
 }
+
+# Run your Python File from project Root Folder
+python -m App.Database.init_db #running init_db file

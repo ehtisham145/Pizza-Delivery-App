@@ -1,8 +1,8 @@
 from fastapi import HTTPException,status,Depends,APIRouter
 from sqlalchemy.exc import IntegrityError
-from App.Database.data_models.pizza_model import PizzaModel
+from App.DataModels.pizza_model import PizzaModel
 from sqlalchemy.orm import Session
-from App.Schemas.pizza import PizzaCreate,PizzaResponse
+from App.Schemas.pizza_schemas import PizzaCreate,PizzaResponse
 from App.Security.jwt import get_current_user
 from App.Database.database import get_db
 #----------------------Pizza Router--------------------------------

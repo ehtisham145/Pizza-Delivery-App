@@ -1,39 +1,36 @@
 from sqlalchemy import create_engine
-#ORMs are used to convert your python code into sql queries so that operations in database can be performed without writing sql queries
-from sqlalchemy.orm import declarative_base,sessionmaker,Session
-#When you want to convert your python class with the data base tables you use declarative_base class
+from sqlalchemy.orm import declarative_base, sessionmaker, Session
 
-#-----------------Base-------------------
+# ----------------- Base -------------------
+# The declarative_base class is used to map Python classes to database tables.
+# It serves as a base class for all your database models.
+Base = declarative_base()
 
-Base=declarative_base()
-
-#When you want to convert your python class code in to database table then you use declarative base table
-# for creating a connection between python app and database we use create engine module of sql
-# Agar password khali (empty) hai
-
-#-----------------DB URL------------------------------
+# ----------------- DB URL ------------------------------
+# SQLite database URL. The database file will be created in the current directory.
 DB_URL = "sqlite:///./pizza_delivery.db"
 
-#------------------Create Connection------------------
-engine=create_engine(DB_URL,connect_args={"check_same_thread": False})
+# ------------------ Create Connection ------------------
+# We use create_engine to establish a connection between the Python application and the database.
+# 'check_same_thread': False is specifically required for SQLite when used with FastAPI.
+engine = create_engine(DB_URL, connect_args={"check_same_thread": False})
 
-#When you want to perform create read update and delete operations on your data base then you use Sessionmaker but these operations will finalized only once 
-#you run command session.commit()
+# ------------------ Create Session Factory ---------------------
+# sessionmaker is used to define the properties of the database session.
+# It acts as a factory that generates session objects whenever a connection is needed.
+# These sessions are used to perform CRUD (Create, Read, Update, Delete) operations.
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-#------------------Create Session---------------------
-#session maker is used to create a session and define the properties of databse in session maker
-SessionLocal=sessionmaker(bind=engine)
-
-# 2. Session (The Object / Asli Kaam)
-# Jab aap SessionLocal() (jo sessionmaker se bana hota hai) ko call karte hain, toh ek Session Object banta hai. 
-# Ye wo asli cheez hai jo database se "Haath milati" hai.
-
-#------------------Dependency------------------------
-def get_db(): #This function creates a session for you then you use this session to perform operations on database and then you close this session
+# ------------------ Dependency ------------------------
+# This generator function creates a database session for each request.
+# The 'yield' keyword provides the session to the FastAPI route.
+# The 'finally' block ensures that the session is always closed after the request is finished,
+# preventing memory leaks or database connection hanging.
+def get_db():
     db: Session = SessionLocal()
     try:
-        yield db  # route me ye session milega
+        yield db  
     finally:
         db.close()
 
-
+print(get_db())
