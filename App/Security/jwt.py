@@ -3,38 +3,15 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from App.Database.database import get_db
 from sqlalchemy.orm import Session
-from App.data_models.user_model import User
+from App.DataModels.user_model import User
 from datetime import datetime, timedelta, timezone
-from dotenv import load_dotenv
-import os
+from typing import Optional
+from App.Utils.tokens import create_access_token,create_refresh_token
 
-# 1. Load Environment Variables (Ensure brackets are used)
-load_dotenv()
 
-ADMIN_USERNAME = os.getenv("admin_name")
-ADMIN_PASSWORD = os.getenv("admin_password")
-
-print(f"--- CHECK: Admin name from ENV is: '{ADMIN_USERNAME}' ---") # Ye line add karein
 
 # Specifies that the token will be extracted from 'Authorization: Bearer <token>' header
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
-
-SECRET_KEY = "your_secret_key" 
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
-
-# -------------------------------------------------------------------------
-# FUNCTION 1: Create Access Token (Used during Login)
-# -------------------------------------------------------------------------
-def create_access_token(data: dict):
-    to_encode = data.copy()
-    # Set expiration time using UTC timezone
-    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode.update({"exp": expire})
-    
-    # Sign and encode the JWT token
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
 
 # -------------------------------------------------------------------------
 # FUNCTION 2: Verify Token (Used in all Protected Routes)

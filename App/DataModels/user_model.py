@@ -35,4 +35,4 @@ class User(Base):
     # It is used for debugging; instead of a memory address, 
     # it prints a readable string like <User ehtisham>.
     def __repr__(self):
-        return f"<User {self.username}>"
+        return f"<User {self.full_name}>"
