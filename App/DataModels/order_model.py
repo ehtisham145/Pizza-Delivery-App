@@ -24,8 +24,8 @@ class Order(Base):
     pizza_sizes = Column(String, default="SMALL")
     
     # 3. ForeignKey mein bhi 'users.id' kar diya
-    user_id = Column(Integer, ForeignKey('users.id'),nullable=False)
-    user = relationship("User", back_populates='orders')
+    # user_id = Column(Integer, ForeignKey('users.id'),nullable=False)
+    # user = relationship("User", back_populates='orders')
 
     def __repr__(self):
         return f"<Order {self.id}>"

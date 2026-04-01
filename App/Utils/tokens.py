@@ -1,12 +1,17 @@
 from typing import Optional
 from datetime import datetime,timedelta,timezone
 import jwt
+from dotenv import load_dotenv
+#load the variable in dot env
+load_dotenv()
+import os
+SECRET_KEY = os.getenv("SECRET_KEY")
+REFRESH_SECRET_KEY =  os.getenv("REFRESH_SECRET_KEY")
+ALGORITHM = os.getenv("ALGORITHM")
+ACCESS_TOKEN_EXPIRE_MINUTES =os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES")
+REFRESH_TOKEN_EXPIRE_DAYS = os.getenv("REFRESH_TOKEN_EXPIRE_DAYS")
 
-SECRET_KEY = "your-very-secret-key-for-access"
-REFRESH_SECRET_KEY = "your-different-secret-key-for-refresh"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
-REFRESH_TOKEN_EXPIRE_DAYS = 7
+# print(REFRESH_SECRET_KEY,ALGORITHM,ACCESS_TOKEN_EXPIRE_MINUTES,REFRESH_TOKEN_EXPIRE_DAYS) # for testing
 
 # -------------------------------------------------------------------------
 # FUNCTION 1: Create Access Token (Used during Login)

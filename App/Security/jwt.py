@@ -4,52 +4,63 @@ from fastapi.security import OAuth2PasswordBearer
 from App.Database.database import get_db
 from sqlalchemy.orm import Session
 from App.DataModels.user_model import User
-from datetime import datetime, timedelta, timezone
-from typing import Optional
 from App.Utils.tokens import create_access_token,create_refresh_token
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
+#-----------------------Imp Server Details---------------
+ADMIN_NAME=os.getenv("admin_name")
+ADMIN_PASSWORD=os.getenv("admin_password")
+SECRET_KEY = os.getenv("SECRET_KEY")
+REFRESH_SECRET_KEY =os.getenv("REFRESH_SECRET_KEY")
+ALGORITHM =os.getenv("ALGORITHM")
+ACCESS_TOKEN_EXPIRE_MINUTES =os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES")
+REFRESH_TOKEN_EXPIRE_DAYS =os.getenv("REFRESH_TOKEN_EXPIRE_DAYS")
 
-
+print(ADMIN_NAME,ADMIN_PASSWORD,SECRET_KEY,REFRESH_SECRET_KEY,ALGORITHM,ACCESS_TOKEN_EXPIRE_MINUTES,REFRESH_TOKEN_EXPIRE_DAYS            )
 # Specifies that the token will be extracted from 'Authorization: Bearer <token>' header
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
-# -------------------------------------------------------------------------
-# FUNCTION 2: Verify Token (Used in all Protected Routes)
-# -------------------------------------------------------------------------
+#-----------Function for checking user token----------------------
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     try:
-        # Step A: Attempt to decode the token
+        # Decode the JWT token using the secret key and specified algorithm
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         
-        # Step B: Log the token payload for debugging purposes
-        print(f"✅ DEBUG SUCCESS: Token Payload found -> {payload}")
-        
+        # Extract the 'sub' (subject) claim which represents the username
         username: str = payload.get("sub")
         
         if username is None:
-            print("❌ DEBUG ERROR: 'sub' key not found in token!")
-            raise HTTPException(status_code=401, detail="Token missing user identity")
+            # Raise exception if the identity claim is missing from the payload
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, 
+                detail="Token is missing user identity information"
+            )
             
     except ExpiredSignatureError:
-        print("❌ DEBUG ERROR: Token has expired!")
-        raise HTTPException(status_code=401, detail="Token has expired. Please login again.")
+        # Specifically handle cases where the token's validity period has passed
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, 
+            detail="Token has expired. Please authenticate again."
+        )
         
-    except JWTError as e:
-        print(f"❌ DEBUG ERROR: Token decoding failed! Reason: {str(e)}")
-        print(f"Advice: Verify that SECRET_KEY is identical in all files.")
-        raise HTTPException(status_code=401, detail="Invalid token signature")
+    except JWTError:
+        # Handle cases where the token is malformed or the signature is invalid
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, 
+            detail="Could not validate credentials due to invalid token signature"
+        )
 
-    # Step C: Admin User Validation
-    if username == ADMIN_USERNAME:
-        print(f"👑 DEBUG: Admin User detected: {username}")
-        return User(username=ADMIN_USERNAME, is_staff=True)
-
-    # Step D: Database User Validation
+    # Validate that the user identified in the token still exists in the database
     user = db.query(User).filter(User.username == username).first()
     
     if user is None:
-        print(f"❌ DEBUG ERROR: User '{username}' exists in token but not in Database!")
-        raise HTTPException(status_code=401, detail="User not found in system")
+        # Security measure: reject access if the user was deleted but holds a valid token
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, 
+            detail="User identity found in token does not exist in the system"
+        )
         
-    print(f"👤 DEBUG: Normal User authenticated: {username}")
+    # Return the authenticated user object to be used by the endpoint
     return user

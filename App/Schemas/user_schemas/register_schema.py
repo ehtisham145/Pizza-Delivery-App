@@ -1,8 +1,9 @@
 import re
 from typing import Annotated
 from App.Utils.validator import validate_password_strength,validate_phone_no
-from pydantic import BaseModel, EmailStr, Field,AfterValidator, Field,Enum
-
+from pydantic import BaseModel, EmailStr, Field,AfterValidator, Field
+from enum import Enum
+from pydantic import BaseModel, Field, EmailStr
 # ----------------- REUSABLE TYPES -----------------
 # This creates a "Type" that is a string, but ALWAYS runs your function after checking the string
 PasswordStr = Annotated[str, AfterValidator(validate_password_strength)]
@@ -23,8 +24,8 @@ class UserRegisterSchema(BaseModel):
     """
     full_name: str = Field(..., min_length=5, max_length=20)
     email: EmailStr
-    phone_no:PasswordStr
-    password:PhoneStr
+    phone_number:PhoneStr
+    password:PasswordStr
     role:Role=Role.Customer #default value is Customer
 
     class ConfigDict:
@@ -32,16 +33,15 @@ class UserRegisterSchema(BaseModel):
         str_strip_whitespace = True  # Automatically trims spaces from all strings
 
 
-#---------------------------------Respone Schema----------------------------------
-class UserResponseSchema(BaseModel):
-    full_name: str = Field(..., min_length=5, max_length=20)
-    email: EmailStr
-    phone_no:PhoneStr
-    password:PasswordStr
 
+class UserResponseSchema(BaseModel):
+    id: int  # Added ID
+    full_name: str = Field(..., min_length=5, max_length=25)
+    email: EmailStr
+    phone_number: str  
+    role: str
+    is_active: bool
+    
     class ConfigDict:
         from_attributes = True
         str_strip_whitespace = True  # Automatically trims spaces from all strings
-
-
-
