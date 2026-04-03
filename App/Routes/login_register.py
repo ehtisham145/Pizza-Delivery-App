@@ -6,11 +6,11 @@ from App.DataModels.user_model import User
 from App.Schemas.user_schemas.register_schema import UserRegisterSchema,UserResponseSchema
 from App.Schemas.user_schemas.login_schema import UserLoginSchema,UserLoginResponseSchema
 from App.Security.authentication import get_password_hash,verify_password
-from App.Security.jwt import get_current_user
 from dotenv import load_dotenv
-from jose import JWTError, jwt, ExpiredSignatureError
 from fastapi import Depends, HTTPException, status
+from App.Utils.tokens import create_access_token,create_refresh_token
 from fastapi.security import OAuth2PasswordBearer
+from datetime import datetime,timedelta
 import os
 load_dotenv()
 import logging
@@ -38,14 +38,14 @@ auth_router=APIRouter()
     response_model=UserResponseSchema,
     summary="Register a new user"
 )
-def register_user(user_data: UserRegisterSchema, db: Session = Depends(get_db)):
+def register_user(user: UserRegisterSchema, db: Session = Depends(get_db)):
     """
     Handles new user registration: checks for existing email, 
     hashes password, and persists user to the database.
     """
     
     # 1. Check if a user with the provided email already exists
-    existing_user = db.query(User).filter(User.email == user_data.email).first()
+    existing_user = db.query(User).filter(User.email == user.email).first()
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -53,14 +53,14 @@ def register_user(user_data: UserRegisterSchema, db: Session = Depends(get_db)):
         )
 
     # 2. Securely hash the plain text password
-    hashed_password = get_password_hash(user_data.password)
+    hashed_password = get_password_hash(user.password)
 
     # 3. Initialize the SQLAlchemy User model with provided data
     new_user = User(
-        full_name=user_data.full_name,
-        email=user_data.email,
+        full_name=user.full_name,
+        email=user.email,
         password=hashed_password,
-        phone_number=user_data.phone_number,
+        phone_number=user.phone_number,
         # Default fields (is_active, role, etc.) are handled by the DB model defaults
     )
 
@@ -96,36 +96,50 @@ def register_user(user_data: UserRegisterSchema, db: Session = Depends(get_db)):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An unexpected server error occurred."
         )
+    return {
+    "id": db_user.id,
+    "full_name": db_user.full_name, 
+    "phone_number":db_user.phone_number, 
+    "role": db_user.role,
+    "is_active":db_user.is_active,
+    }
 
-# #----------------------Login-------------------------------
+#----------------------Login-------------------------------
 
-# @auth_router.post(
-#     "/Login",
-#     status_code=status.HTTP_201_CREATED
-#     ,response_class=UserLoginResponseSchema,
-#     summary="Login in to your Account"
-# )
-# def login(
-#     db: Session = Depends(get_db), 
-#     form_data: OAuth2PasswordRequestForm = Depends()
-# ):
-#     #Find user in database
-#     db_user = db.query(User).filter(User.email == form_data.email).first()
+@auth_router.post(
+    "/Login",
+    status_code=status.HTTP_201_CREATED
+    ,response_model=UserLoginResponseSchema,
+    summary="Login in to your Account"
+)
+def login(user:UserLoginSchema,db: Session = Depends(get_db)):
+    #Find user in database
+    db_user = db.query(User).filter(User.email == user.email).first()
 
-#     if db_user and verify_password(form_data.password, db_user.password):
-#         token_data = {"sub": db_user.email, "Role": db_user.role}
+    if db_user and verify_password(user.password, db_user.password):
+        token_data = {"sub": db_user.email, "Role": db_user.role}
     
-#     else:
-#         raise HTTPException(
-#             status_code=status.HTTP_401_UNAUTHORIZED, 
-#             detail="Incorrect username or password",
-#             headers={"WWW-Authenticate": "Bearer"},
-#         )
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, 
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
-#     # 4. Token Creation 
-#     access_token = create_access_token(data=token_data)
-    
-#     return {
-#         "access_token": access_token, 
-#         "token_type": "bearer",
-#     }
+    # 4. Token Creation 
+    access_token = create_access_token(data=token_data)
+    refresh_token_jwt=create_refresh_token(data=token_data)
+
+    return {
+    "access_token": access_token,
+    "token_type": "bearer",
+    "email": db_user.email,
+    "full_name": db_user.full_name,
+    "refresh_token": {
+        "token": refresh_token_jwt,
+        "user_id": db_user.id,
+        "created_at": datetime.now(),
+        "expires_at": datetime.now() + timedelta(days=7), 
+        "is_revoked": False
+    }
+}
