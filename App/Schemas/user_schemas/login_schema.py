@@ -22,5 +22,6 @@ class UserLoginResponseSchema(BaseModel):
     email: EmailStr
     full_name:str
 
-    class ConfigDict:
-        from_attributes = True
+    model_config={
+        "form_attributes":True
+    }

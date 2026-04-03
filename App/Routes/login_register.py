@@ -1,4 +1,5 @@
 from fastapi import HTTPException,Depends,APIRouter,status
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.exc import SQLAlchemyError,IntegrityError
 from sqlalchemy.orm import Session
 from App.Database.database import get_db
@@ -38,7 +39,7 @@ auth_router=APIRouter()
     response_model=UserResponseSchema,
     summary="Register a new user"
 )
-def register_user(user: UserRegisterSchema, db: Session = Depends(get_db)):
+def register_user(user:UserRegisterSchema,db: Session = Depends(get_db)):
     """
     Handles new user registration: checks for existing email, 
     hashes password, and persists user to the database.
@@ -97,11 +98,12 @@ def register_user(user: UserRegisterSchema, db: Session = Depends(get_db)):
             detail="An unexpected server error occurred."
         )
     return {
-    "id": db_user.id,
-    "full_name": db_user.full_name, 
-    "phone_number":db_user.phone_number, 
-    "role": db_user.role,
-    "is_active":db_user.is_active,
+        "id": user.id,
+        "email":"user.email",
+        "full_name": user.full_name, 
+        "phone_number":user.phone_number, 
+        "role": user.role,
+        "is_active":user.is_active,
     }
 
 #----------------------Login-------------------------------
@@ -112,11 +114,12 @@ def register_user(user: UserRegisterSchema, db: Session = Depends(get_db)):
     ,response_model=UserLoginResponseSchema,
     summary="Login in to your Account"
 )
-def login(user:UserLoginSchema,db: Session = Depends(get_db)):
+def login(data:OAuth2PasswordRequestForm=Depends(),db: Session = Depends(get_db)):
     #Find user in database
-    db_user = db.query(User).filter(User.email == user.email).first()
+    db_user = db.query(User).filter(User.email == data.username).first()
 
-    if db_user and verify_password(user.password, db_user.password):
+    if db_user and verify_password(data.password, db_user.password):
+
         token_data = {"sub": db_user.email, "Role": db_user.role}
     
     else:

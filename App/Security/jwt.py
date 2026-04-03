@@ -20,7 +20,8 @@ REFRESH_TOKEN_EXPIRE_DAYS =os.getenv("REFRESH_TOKEN_EXPIRE_DAYS")
 
 print(ADMIN_NAME,ADMIN_PASSWORD,SECRET_KEY,REFRESH_SECRET_KEY,ALGORITHM,ACCESS_TOKEN_EXPIRE_MINUTES,REFRESH_TOKEN_EXPIRE_DAYS            )
 # Specifies that the token will be extracted from 'Authorization: Bearer <token>' header
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/Login")
+#The main purpose of this script is to check whether user has the token or not
 
 #-----------Function for checking user token----------------------
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
@@ -28,10 +29,10 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         # Decode the JWT token using the secret key and specified algorithm
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         
-        # Extract the 'sub' (subject) claim which represents the username
-        username: str = payload.get("sub")
+        # Extract the 'sub' (subject) claim which represents the email
+        email: str = payload.get("sub")
         
-        if username is None:
+        if email is None:
             # Raise exception if the identity claim is missing from the payload
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED, 
@@ -53,7 +54,7 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         )
 
     # Validate that the user identified in the token still exists in the database
-    user = db.query(User).filter(User.username == username).first()
+    user = db.query(User).filter(User.email == email).first()
     
     if user is None:
         # Security measure: reject access if the user was deleted but holds a valid token
