@@ -1,7 +1,7 @@
 from fastapi import FastAPI
-from App.Routes.login_register import auth_router
+from App.Routes.Auth_Users.login_register import auth_router
 from App.Database.init_db import create_tables
-from App.Routes.profile import profile_router
+from App.Routes.Auth_Users.profile import profile_router
 import uvicorn
 
 app=FastAPI()

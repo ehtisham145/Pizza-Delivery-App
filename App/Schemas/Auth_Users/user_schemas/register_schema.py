@@ -9,10 +9,6 @@ from pydantic import BaseModel, Field, EmailStr
 PasswordStr = Annotated[str, AfterValidator(validate_password_strength)]
 PhoneStr = Annotated[str, AfterValidator(validate_phone_no)]
 
-class Role(str,Enum):
-    Staff="staff"
-    Customer="customer"
-    Admin="admin"
 #first of all check whether user enter detail is string and if not str such as tuple list or dict 
 #  an error will occur before applying validation 
 
@@ -26,7 +22,7 @@ class UserRegisterSchema(BaseModel):
     email: EmailStr
     phone_number:PhoneStr
     password:PasswordStr
-    role:Role=Role.Customer #default value is Customer
+    role:str
 
     class ConfigDict:
         from_attributes = True

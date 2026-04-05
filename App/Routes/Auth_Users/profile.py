@@ -1,11 +1,13 @@
 from fastapi import HTTPException,status,Depends,APIRouter
 from sqlalchemy.orm import Session
-from App.Schemas.user_schemas.update_schema import UserUpdateSchema
-from App.Schemas.password_schema.change_password_schema import ChangePasswordSchema
-from App.Security.jwt import get_current_user
-from App.Security.authentication import get_password_hash,verify_password 
-from App.DataModels.user_model import User
+from App.Schemas.Auth_Users.user_schemas.update_schema import UserUpdateSchema
+from App.Schemas.Auth_Users.password_schema.change_password_schema import ChangePasswordSchema
+from App.Utils.auth_utils import get_current_user,get_password_hash,verify_password 
+from App.DataModels.Auth_Users.user_model import User
 from App.Database.database import get_db
+
+
+
 #--------------------Get current user profile----------------------
 profile_router=APIRouter()
 @profile_router.get(
@@ -34,6 +36,9 @@ def Update_Profile(update_data:UserUpdateSchema,current_user:User=Depends(get_cu
     db.refresh(current_user)
 
     return {"message": "Profile updated successfully", "user": current_user.full_name}
+
+
+
 
 #------------------Change Your Password-----------------------
 @profile_router.put(

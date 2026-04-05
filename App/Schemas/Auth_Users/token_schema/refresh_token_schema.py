@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
-class RefreshTokenSchema(BaseModel):
+class RefreshTokenRequest(BaseModel):
     refresh_token:str   
     # IMPORTANT: The link to your User table
     user_id:int

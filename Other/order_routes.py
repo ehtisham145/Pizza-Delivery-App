@@ -6,8 +6,8 @@ from typing import List
 from App.Schemas.order_schemas import OrderModel, OrderResponseModel
 from App.Database.database import get_db
 from App.DataModels.order_model import Order
-from App.Security.jwt import get_current_user
-from App.DataModels.user_model import User
+from App.Security.auth_utils import get_current_user
+from App.DataModels.Auth_Users.user_model import User
 
 # Initializing the router with a prefix and tags for better documentation
 order_router = APIRouter()

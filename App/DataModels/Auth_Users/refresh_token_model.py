@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
 from sqlalchemy.sql import func
 from App.Database.database import Base
 
-class RefreshToken(Base):
+class RefreshTokenModel(Base):
     __tablename__ = "refresh_tokens" # Good practice to name the table
 
     id = Column(Integer, primary_key=True, index=True)

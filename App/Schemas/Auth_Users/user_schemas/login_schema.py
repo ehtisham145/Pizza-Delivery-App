@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
-from App.Schemas.refresh_token_schema import RefreshTokenSchema
+from App.Schemas.Auth_Users.token_schema.refresh_token_schema import RefreshTokenRequest
 # ----------------- Login Request -----------------
 class UserLoginSchema(BaseModel):
     """
@@ -16,7 +16,7 @@ class UserLoginResponseSchema(BaseModel):
     Schema for the response after a successful login.
     NEVER return the password (even hashed) in the response.
     """
-    refresh_token:RefreshTokenSchema
+    refresh_token:RefreshTokenRequest
     access_token: str
     token_type: str = "bearer"
     email: EmailStr

@@ -3,7 +3,7 @@ from sqlalchemy.exc import IntegrityError
 from App.DataModels.pizza_model import PizzaModel
 from sqlalchemy.orm import Session
 from App.Schemas.pizza_schemas import PizzaCreate,PizzaResponse
-from App.Security.jwt import get_current_user
+from App.Security.auth_utils import get_current_user
 from App.Database.database import get_db
 #----------------------Pizza Router--------------------------------
 pizza_router=APIRouter()
