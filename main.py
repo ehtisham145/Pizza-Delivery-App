@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from App.Routes.Auth_Users.login_register import auth_router
 from App.Database.init_db import create_tables
 from App.Routes.Auth_Users.profile import profile_router
+from App.Routes.Menu_Routes.menu_routes import menu_router
 import uvicorn
 
 app=FastAPI()
@@ -10,7 +11,7 @@ create_tables()
     
 app.include_router(auth_router,prefix='/auth',tags=['Authentication'])
 app.include_router(profile_router,prefix="/profile",tags=["Profile"])
-
+app.include_router(menu_router,prefix="/menu",tags=["Menu"])
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="127.0.0.1", port=8009, reload=True)

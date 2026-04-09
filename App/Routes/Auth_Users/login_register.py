@@ -2,19 +2,19 @@ from fastapi import HTTPException,Depends,APIRouter,status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.exc import SQLAlchemyError,IntegrityError
 from sqlalchemy.orm import Session
-from App.Utils.auth_utils import get_current_user,get_password_hash,verify_password,create_access_token,create_refresh_token 
+from App.Utils.middleware import get_current_user,get_password_hash,verify_password,create_access_token,create_refresh_token 
 from App.Database.database import get_db
 from App.DataModels.Auth_Users.refresh_token_model import RefreshTokenModel
 from App.DataModels.Auth_Users.user_model import User
-from App.Schemas.Auth_Users.token_schema.refresh_token_schema import RefreshTokenRequest 
-from App.Schemas.Auth_Users.user_schemas.register_schema import UserRegisterSchema,UserResponseSchema
-from App.Schemas.Auth_Users.user_schemas.login_schema import UserLoginResponseSchema
+from App.Schemas.Auth_Users.Token_Schema.refresh_token_schema import RefreshTokenRequest 
+from App.Schemas.Auth_Users.User_Schema.register_schema import UserRegisterSchema,UserResponseSchema
+from App.Schemas.Auth_Users.User_Schema.login_schema import UserLoginResponseSchema
 from dotenv import load_dotenv
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from datetime import datetime,timedelta
 from App.DataModels.Auth_Users.black_list_token_model import BlackListTokens
-from App.Utils.auth_utils import verify_refresh_token
+from App.Utils.middleware import verify_refresh_token
 import os
 from dotenv import load_dotenv
 load_dotenv()

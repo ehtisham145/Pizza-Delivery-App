@@ -1,8 +1,8 @@
 from fastapi import HTTPException,status,Depends,APIRouter
 from sqlalchemy.orm import Session
-from App.Schemas.Auth_Users.user_schemas.update_schema import UserUpdateSchema
-from App.Schemas.Auth_Users.password_schema.change_password_schema import ChangePasswordSchema
-from App.Utils.auth_utils import get_current_user,get_password_hash,verify_password 
+from App.Schemas.Auth_Users.User_Schema.update_schema import UserUpdateSchema
+from App.Schemas.Auth_Users.Password_Schema.change_password_schema import ChangePasswordSchema
+from App.Utils.middleware import get_current_user,get_password_hash,verify_password 
 from App.DataModels.Auth_Users.user_model import User
 from App.Database.database import get_db
 

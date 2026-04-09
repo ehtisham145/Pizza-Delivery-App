@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
-from App.Schemas.Auth_Users.token_schema.refresh_token_schema import RefreshTokenRequest
+from App.Schemas.Auth_Users.Token_Schema.refresh_token_schema import RefreshTokenRequest
 # ----------------- Login Request -----------------
 class UserLoginSchema(BaseModel):
     """
