@@ -1,4 +1,4 @@
-from pydantic import BaseModel,Field
+from pydantic import BaseModel,Field,HttpUrl
 from typing import Optional
 from datetime import datetime
 from App.DataModels.Menu_Model.menu_model import PizzaSize 
@@ -22,7 +22,7 @@ class Pizza_Request(BaseModel):
     name:str=Field(...,min_length=5,max_length=50)
     description:str=Field(...,max_length=500)
     base_price:float=Field(...,gt=0)    
-    image_url:str
+    image_url:HttpUrl
     is_available:bool=True
     category_id:int
 

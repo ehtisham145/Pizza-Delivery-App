@@ -24,4 +24,5 @@ def make_user_admin(user_email: str):
     finally:
         db.close()
 
-make_user_admin("")
+make_user_admin("ehtisham2406@gmail.com")
+
