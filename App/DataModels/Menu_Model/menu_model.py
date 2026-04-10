@@ -17,6 +17,10 @@ class Category_Model(Base):
     
     created_at:Optional=Column(DateTime,default=datetime.utcnow)
 
+    
+    def __repr__(self): # Check whether data table is working correctly in Database
+        return f"<Category (name={self.name}, size={self.description})>"
+
 #========================== Pizza Table ===========================
 
 
@@ -50,6 +54,8 @@ class Pizza_Model(Base):
     # onupdate ensures the timestamp refreshes whenever the row is edited
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+    def __repr__(self): # Check whether data table is working correctly in Database
+        return f"<Pizza(name={self.name}, size={self.description})>"
 
 #==========================Size Table===========================
 class PizzaSize(enum.Enum):
@@ -64,6 +70,10 @@ class Size_Model(Base):
     id=Column(Integer,primary_key=True,index=True)
     size=Column(Enum(PizzaSize),nullable=False,default=PizzaSize.MEDIUM)
     price_multiplier = Column(Float, nullable=False, default=1.0)
+
+    
+    def __repr__(self): # Check whether data table is working correctly in Database
+        return f"<Size(name={self.name}, size={self.size})>"
 
 # 2. How to use it in your logic
 
@@ -93,3 +103,6 @@ class ToppingModel(Base):
     extra_price=Column(Float,index=True,nullable=False)
 
     is_availble=Column(Boolean,default=True,index=True)
+
+    def __repr__(self): # Check whether data table is working correctly in Database
+        return f"<Topping (name={self.name}, size={self.extra_price})>"
