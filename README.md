@@ -27,7 +27,7 @@ A secure, production-ready FastAPI backend module focused on robust Authenticati
 
     Async Persistence: Optimized database interactions using SQLAlchemy for non-blocking I/O.
 
-🛠️ Tech Stack
+## Tech Stack
 
 Component	Technology
 Framework	FastAPI
@@ -35,47 +35,69 @@ Database	PostgreSQL + SQLAlchemy
 Security	JWT (PyJWT), Passlib (BCrypt)
 Validation	Pydantic V2
 
-##📂 Project Structure
+## Project Structure
+
 
 The project follows a modular architecture to ensure separation of concerns and maintainability:
 Plaintext
 
+
 ├── App/
+
 │   ├── Database/    # Database engine, session management, and migrations
+
 │   ├── Models/      # SQLAlchemy ORM definitions (User, Token models)
+
 │   ├── Schemas/     # Pydantic models for request/response validation
+
 │   ├── Routes/      # API controllers (Auth and User logic)
+
 │   └── Security/    # JWT generation, token rotation, and hashing utilities
+
 ├── main.py          # FastApi application entry point
+
 └── .env             # Environment variables and secret keys
 
-📍 API Reference
+## 📍 API Reference
 
 Authentication Endpoints
+
 Method	Endpoint	Description
+
 POST	/auth/signup	Register a new user account
+
 POST	/auth/login	Authenticate user and receive Access/Refresh tokens
+
 POST	/auth/refresh	Obtain a new Access Token using a valid Refresh Token
+
 User Management (Protected)
+
 Method	Endpoint	Description
+
 GET	/user/me	Retrieve the currently logged-in user's profile
+
 PUT	/user/update	Update general profile info (Username/Email)
+
 PATCH	/user/password	Securely update account password
+
 PATCH	/user/phone	Update verified phone number
 
 
-🚀 Getting Started
-1. Environment Setup
+## 🚀 Getting Started
+
+## 1. Environment Setup
 Bash
 
 # Create and activate virtual environment
+
 python -m venv .venv
 source .venv/bin/activate  # On Windows use: .venv\Scripts\activate
 
 # Install core dependencies
+
 pip install fastapi uvicorn sqlalchemy psycopg2 passlib[bcrypt] python-jose[cryptography]
 
-2. Configuration
+## 2. Configuration
 
 Create a .env file in the root directory and define your secrets:
 Code snippet
@@ -85,7 +107,7 @@ SECRET_KEY=your_super_secret_key
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 
-3. Launch
+## 3. Launch
 Bash
 
 # Initialize database tables
