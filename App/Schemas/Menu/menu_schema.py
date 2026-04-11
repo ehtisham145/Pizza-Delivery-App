@@ -15,6 +15,9 @@ class Category_Request(BaseModel):
 class Category_Response(Category_Request):
     id: int
     created_at: datetime
+    model_config={
+        "form_attributes":True
+    }
 #========================== Pizza Validation===========================
 
 
@@ -35,6 +38,9 @@ class Pizza_Response(Pizza_Request):
     created_at: datetime
     updated_at: datetime
 
+    model_config={
+        "form_attributes":True
+    }
 #==========================Size Table===========================
 
 class Size_Request(BaseModel):
@@ -52,6 +58,9 @@ class Size_Response(Size_Request):
     created_at:datetime
     updated_at:datetime
 
+    model_config={
+        "form_attributes":True
+    }
 # 2. How to use it in your logic
 
 # The goal of this table is to adjust the final price. In your backend logic, your calculation would look like this:
