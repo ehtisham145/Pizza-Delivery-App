@@ -6,19 +6,20 @@ from typing import Optional
 from App.Database.database import get_db
 from App.DataModels.Auth_Users.user_model import User
 from typing import List
-from App.DataModels.Menu_Model.menu_model import Category_Model,Pizza_Model,Size_Model 
-from App.Schemas.Menu.menu_schema import Category_Request,Category_Response,Pizza_Request,Pizza_Response,Size_Response,Size_Request 
+from App.DataModels.Menu_Model.menu_model import Category_Model,Pizza_Model,Size_Model,ToppingModel 
+from App.Schemas.Menu.menu_schema import Category_Request,Category_Response,Pizza_Request,Pizza_Response,Size_Response,Size_Request,Topping_Request 
 #Creating a Router for Menu related work
 menu_router=APIRouter()
 
 
 #=====================Create Pizza (Admin)===================
-@menu_router.post("/Create_Pizza",status_code=status.HTTP_200_OK,response_model=Pizza_Response)
+@menu_router.post("/Create_Pizza",status_code=status.HTTP_201_CREATED,response_model=Pizza_Response)
 def create_pizza(pizza:Pizza_Request,db:Session=Depends(get_db),user:User=Depends(get_current_user)):
+    #1.Guard Check
     if user.role!="admin":
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,detail="Only Admin can add a new pizza in database !")
-    else:
-        new_pizza=Pizza_Model(
+    #2.Creating Pizza
+    new_pizza=Pizza_Model(
                 name=pizza.name,
                 description=pizza.description,
                 base_price=pizza.base_price,
@@ -26,14 +27,14 @@ def create_pizza(pizza:Pizza_Request,db:Session=Depends(get_db),user:User=Depend
                 is_available=pizza.is_available,
                 category_id=pizza.category_id
             )
-
-        db.add(new_pizza)
-        db.commit()
-        db.refresh(new_pizza)
-        return new_pizza
+    #3.Adding Pizza in Database
+    db.add(new_pizza)
+    db.commit()
+    db.refresh(new_pizza)
+    return new_pizza
 
 #=====================Getting All Pizzas===================
-@menu_router.get("/Get_all_pizzas",status_code=status.HTTP_200_OK,response_model=List[Pizza_Response])
+@menu_router.get("/Get_all_pizzas",status_code=status.HTTP_201_CREATED,response_model=List[Pizza_Response])
 def Get_all_pizza(db:Session=Depends(get_db),user:User=Depends(get_current_user)):
         pizzas=db.query(Pizza_Model).all()
         if not pizzas:
@@ -50,73 +51,120 @@ def Pizza_by_id(pizza_id:int,db:Session=Depends(get_db),user:User=Depends(get_cu
         return pizza
 
 #=====================Upate a Pizza (Admin)===================
-@menu_router.put("/Update_Pizza/{pizza_id}",status_code=status.HTTP_201_CREATED)
+@menu_router.put("/Update_Pizza/{pizza_id}",status_code=status.HTTP_200_OK)
 def Update_Pizza(pizza:Pizza_Request,pizza_id:int,db:Session=Depends(get_db),user:User=Depends(get_current_user)):
+    #1.Guard Check
     if user.role!="admin":
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="Only Admin can Update the Pizza Details !")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,detail="Only Admin can Update the Pizza Details !")
     
+    #2.Searching Pizza in DataBase
     db_pizza=db.query(Pizza_Model).filter(Pizza_Model.id==pizza_id).first()
-
+    
+    #3.Raise Error if pizza not found
     if not db_pizza:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Pizza with this id is not found in Data Base !")
-    else:
-        db_pizza.name = pizza.name
-        db_pizza.description = pizza.description
-        db_pizza.base_price = pizza.base_price
-        db_pizza.image_url = str(pizza.image_url)
-        db_pizza.is_available = pizza.is_available
-        db_pizza.category_id = pizza.category_id
+    
+    #4.Updating Pizza in Data Base
+    db_pizza.name = pizza.name
+    db_pizza.description = pizza.description
+    db_pizza.base_price = pizza.base_price
+    db_pizza.image_url = str(pizza.image_url)
+    db_pizza.is_available = pizza.is_available
+    db_pizza.category_id = pizza.category_id
 
-        db.add(db_pizza)
-        db.commit()
-        db.refresh(db_pizza)
+    db.add(db_pizza)
+    db.commit()
+    db.refresh(db_pizza)
 
-        return db_pizza
+    return db_pizza
 
 #=====================Delete a Pizza (Admin)===================
-@menu_router.delete("/Delete_Pizza/{pizza_id}",status_code=status.HTTP_200_OK)
-def Delete_Pizza(pizza_id:int,db:Session=Depends(get_db),user:User=Depends(get_current_user)):
-    if user.role!="admin":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,detail="Only Admin can delete a pizza from database !")
-    else:
-        pizza=db.query(Pizza_Model).filter(Pizza_Model.id==pizza_id).first()
-        if pizza is not None:
-            try:
-                db.delete(pizza)
-                db.commit()
-                db.refresh(pizza)
-                return {"Pizza Deleted Successfully !" : pizza}
-            
-            except Exception as e:
-                db.delete(pizza)
-                db.commit()
-                return {"Msg":"Pizza Deleted Successfully","Pizza":pizza}
-                
-        else:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Pizza with this Is not found in Database !")
+@menu_router.delete("/pizzas/{pizza_id}", status_code=status.HTTP_200_OK)
+def delete_pizza(pizza_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    # 1. Authorization Guard
+    if user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, 
+            detail="Only Admin can delete a pizza."
+        )
+
+    # 2. Fetch the pizza
+    pizza = db.query(Pizza_Model).filter(Pizza_Model.id == pizza_id).first()
+    
+    # 3. Guard: Not Found
+    if not pizza:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="Pizza not found."
+        )
+
+    # 4. Execution
+    # We don't need a try/except here because your main.py handles it!
+    db.delete(pizza)
+    db.commit()
+    
+    return {"message": "Pizza deleted successfully"}
 
 #==================Create Categories in Datavase (Admin)===========================
 @menu_router.post("/Create_Category",status_code=status.HTTP_201_CREATED,response_model=Category_Response)
 def Create_Category(category:Category_Request,db:Session=Depends(get_db),user:User=Depends(get_current_user)):
+    #1.Guard Check
     if user.role!="admin":
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Only Admin can add the categories for pizza in DataBase !")
-    else:
-        new_category=Category_Model(
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,detail="Only Admin can add the categories for pizza in DataBase !")
+    
+    #2.Create Categories
+    new_category=Category_Model(
             name=category.name,
             description=category.description
         )
-        db.add(new_category)
-        db.commit()
-        db.refresh(new_category)
-        return new_category
+    #3.Adding Category in Database
+    db.add(new_category)
+    db.commit()
+    db.refresh(new_category)
+    return new_category
 
 #=================List All Categories in DataBase===========================
 @menu_router.get("/View_Categories",status_code=status.HTTP_200_OK)
 def View_Categories(db:Session=Depends(get_db),user:User=Depends(get_current_user)):
     categories=db.query(Category_Model).all()
-    #.all function return you an empty list in database 
+    #.All function return you an empty list in database 
     if not categories:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="No Category is Added to the Database yet")
     else:
         return categories
 
+#=============Create Toppings(only for Admin)==============================
+@menu_router.post("/Create_Toppings",status_code=status.HTTP_201_CREATED)
+def create_topping(topping_data:Topping_Request,db:Session=Depends(get_db),user:User=Depends(get_current_user)):
+    # Guard 1: Check Role
+    if user.role!="admin":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,detail="Only Admin can create toppings !")
+    # Guard 2: Check Uniqueness
+    existing_topping=db.query(ToppingModel).filter(topping_data.name==ToppingModel.name).first()
+    if existing_topping:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, 
+            detail="Topping already exists."
+    )# Execution: If we got here, everything is valid
+        new_topping=ToppingModel(
+                name=topping_data.name,
+                extra_price=topping_data.extra_price,
+                is_available=topping_data.is_available
+            )
+    #Adding in Data Base !
+        db.add(new_topping)
+        db.commit()
+        db.refresh(new_topping)
+        
+        return {"message": f"Topping '{new_topping.name}' added successfully."}
+
+#=============List All Topping==============================
+@menu_router.get("/All_Toppings",status_code=status.HTTP_200_OK)
+def get_all_toppings(db:Session=Depends(get_db),user:User=Depends(get_current_user)):
+    #1. Accessing all topping in database
+    toppings=db.query(ToppingModel).all()
+    #2.Check whether Toppings are present or not
+    if not toppings:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="No Toppings is added by Admins in Data Base !")
+    #.3 Show all toppings
+    re
