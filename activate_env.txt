@@ -6,7 +6,7 @@ To start your virtual environment in PowerShell, use one of these two methods:
 
     Script 1 (Bypass Policy): powershell -ExecutionPolicy Bypass -File .\.venv\Scripts\Activate.ps1
 
-    Script 2 (Direct): .\.venv\Scripts\Activate.ps1
+    Script 2 (Direct): .venv\Scripts\activate
 
 2. Database Initialization & JSON Example
 User Data Format (JSON)

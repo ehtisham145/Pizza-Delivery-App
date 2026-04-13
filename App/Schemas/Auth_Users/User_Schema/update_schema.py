@@ -13,6 +13,6 @@ class UserUpdateSchema(BaseModel):
     full_name: str = Field(..., min_length=5, max_length=20)
     phone_number:PhoneStr
     model_config={
-        "form_attributes":True
+       "from_attributes": True
     }
         

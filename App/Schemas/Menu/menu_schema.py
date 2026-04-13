@@ -1,22 +1,25 @@
 from pydantic import BaseModel,Field,HttpUrl
 from typing import Optional
 from datetime import datetime
-from App.DataModels.Menu_Model.menu_model import PizzaSize 
+from App.Utils.constant import PizzaCategoryEnum, PizzaSizeEnum
 #=========================Category Validation===========================
 
 class Category_Request(BaseModel): 
-    name:str=Field(...,min_length=4,max_length=100)
-    description:str
-    model_config={
-        #This actually allows pydantic to read data from sql data models 
-        "form_attributes":True
+    name: PizzaCategoryEnum
+    description: str
+    
+    model_config = {
+        "from_attributes": True
     }
 
-class Category_Response(Category_Request):
+class Category_Response(BaseModel): # Inheritance ki bajaye seedha BaseModel use karein
     id: int
+    name: PizzaCategoryEnum
+    description: str
     created_at: datetime
-    model_config={
-        "form_attributes":True
+    
+    model_config = {
+        "from_attributes": True
     }
 #========================== Pizza Validation===========================
 
@@ -26,40 +29,43 @@ class Pizza_Request(BaseModel):
     description:str=Field(...,max_length=500)
     base_price:float=Field(...,gt=0)    
     image_url:HttpUrl
+    is_deleted:bool=False
     is_available:bool=True
     category_id:int
 
     model_config={
-        "form_attributes":True
+        "from_attributes": True
     }
 
-class Pizza_Response(Pizza_Request):
+class Pizza_Response(BaseModel):
     id: int
+    name:str
     created_at: datetime
     updated_at: datetime
-
+    
     model_config={
-        "form_attributes":True
+        "from_attributes": True
     }
 #==========================Size Table===========================
 
 class Size_Request(BaseModel):
-    size:PizzaSize=Field(default=PizzaSize.MEDIUM)
+    size:PizzaSizeEnum
     # price_multiplier must be a positive number
     # gt=0 ensures they can't set a 0 or negative price
     price_multiplier:float=Field(default=1.0,gt=0)
 
     model_config={
-        "form_attributes":True
+        "from_attributes": True
     }
 
 class Size_Response(Size_Request):
     id:int
+    size:PizzaSizeEnum
     created_at:datetime
     updated_at:datetime
-
+    
     model_config={
-        "form_attributes":True
+        "from_attributes": True
     }
 # 2. How to use it in your logic
 
@@ -85,5 +91,5 @@ class Topping_Request(BaseModel):
     is_available:bool=True
 
     model_config={
-        "form_attributes":True
+        "from_attributes": True
     }

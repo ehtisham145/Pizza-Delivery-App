@@ -9,5 +9,5 @@ class RefreshTokenRequest(BaseModel):
     is_revoked:bool
 
     model_config={
-        "form_attributes":True
+        "from_attributes":True
     }

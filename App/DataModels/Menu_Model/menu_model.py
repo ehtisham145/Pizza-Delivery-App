@@ -1,4 +1,5 @@
-from sqlalchemy import Integer,Column,Table,String,DateTime,ForeignKey,Float,Boolean,Enum
+from sqlalchemy import Integer,Column,Table,String,DateTime,Boolean,ForeignKey,Float,Enum as SQLEnum
+from App.Utils.constant import PizzaCategoryEnum,PizzaSizeEnum
 from App.Database.database import Base
 from typing import Optional
 from datetime import datetime
@@ -11,7 +12,7 @@ class Category_Model(Base):
     
     id=Column(Integer,primary_key=True,index=True)
     
-    name=Column(String(100),index=True,unique=True,nullable=False)
+    name=Column(SQLEnum(PizzaCategoryEnum),index=True,unique=True,nullable=False)
     
     description=Column(String(500),nullable=True)
     
@@ -41,6 +42,9 @@ class Pizza_Model(Base):
     
     # Remove index: Never used in a WHERE clause
     image_url = Column(String(255), nullable=False)
+
+    #Deletion of Pizza Status
+    is_deleted=Column(Boolean,default=False,index=True)
     
     # Useful for filtering "Out of Stock" items
     is_available = Column(Boolean, default=True, index=True)
@@ -58,17 +62,12 @@ class Pizza_Model(Base):
         return f"<Pizza(name={self.name}, size={self.description})>"
 
 #==========================Size Table===========================
-class PizzaSize(enum.Enum):
-    SMALL="small"
-    MEDIUM="medium"
-    LARGE="large"
-    X_Large="X-Large"
 
 
 class Size_Model(Base):
     __tablename__="size"
     id=Column(Integer,primary_key=True,index=True)
-    size=Column(Enum(PizzaSize),nullable=False,default=PizzaSize.MEDIUM)
+    size=Column(SQLEnum(PizzaSizeEnum),nullable=False)
     price_multiplier = Column(Float, nullable=False, default=1.0)
 
     

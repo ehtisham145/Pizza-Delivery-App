@@ -23,5 +23,5 @@ class UserLoginResponseSchema(BaseModel):
     full_name:str
 
     model_config={
-        "form_attributes":True
+        "from_attributes": True
     }
