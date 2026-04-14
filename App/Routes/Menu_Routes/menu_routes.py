@@ -8,7 +8,7 @@ from App.DataModels.Auth_Users.user_model import User
 from typing import List
 from App.Utils.constant import PizzaCategoryEnum,PizzaSizeEnum
 from App.DataModels.Menu_Model.menu_model import Category_Model,Pizza_Model,Size_Model,ToppingModel 
-from App.Schemas.Menu.menu_schema import Category_Request,Category_Response,Pizza_Request,Pizza_Response,Size_Response,Size_Request,Topping_Request 
+from App.Schemas.Menu.menu_schema import Category_Request,Category_Response,Pizza_Request,Pizza_Response,Size_Response,Size_Request,Topping_Request,Topping_Response 
 #Creating a Router for Menu related work
 menu_router=APIRouter()
 
@@ -19,6 +19,15 @@ def create_pizza(pizza:Pizza_Request,db:Session=Depends(get_db),user:User=Depend
     #1.Guard Check
     if user.role!="admin":
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,detail="Only Admin can add a new pizza in database !")
+    #Existing pizza
+    existing_pizza = db.query(Pizza_Model).filter(Pizza_Model.name == pizza.name).first()
+    
+    if existing_pizza:
+        # Agar mil jaye, toh error throw karein
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Pizza with this name is already stored in Data Base use another name."
+        )
     #2.Creating Pizza
     new_pizza=Pizza_Model(
                 name=pizza.name,
@@ -157,7 +166,7 @@ def View_Categories(db:Session=Depends(get_db),user:User=Depends(get_current_use
         return categories
 
 #=============Create Toppings(only for Admin)==============================
-@menu_router.post("/Create_Toppings",status_code=status.HTTP_201_CREATED)
+@menu_router.post("/Create_Toppings",status_code=status.HTTP_201_CREATED,response_model=Topping_Response)
 def create_topping(topping_data:Topping_Request,db:Session=Depends(get_db),user:User=Depends(get_current_user)):
     # Guard 1: Check Role
     if user.role!="admin":
@@ -169,21 +178,20 @@ def create_topping(topping_data:Topping_Request,db:Session=Depends(get_db),user:
             status_code=status.HTTP_400_BAD_REQUEST, 
             detail="Topping already exists."
     )# Execution: If we got here, everything is valid
-        new_topping=ToppingModel(
+    new_topping=ToppingModel(
                 name=topping_data.name,
-                extra_price=topping_data.extra_price,
-                is_available=topping_data.is_available
+                extra_price=topping_data.extra_price
             )
     #Adding in Data Base !
-        db.add(new_topping)
-        db.commit()
-        db.refresh(new_topping)
+    db.add(new_topping)
+    db.commit()
+    db.refresh(new_topping)
         
-        return {"message": f"Topping '{new_topping.name}' added successfully."}
+    return new_topping
 
 #=============List All Topping==============================
-@menu_router.get("/All_Toppings",status_code=status.HTTP_200_OK)
-def get_all_toppings(db:Session=Depends(get_db),user:User=Depends(get_current_user)):
+@menu_router.get("/All_Toppings",status_code=status.HTTP_200_OK,response_model=List[Topping_Response])
+def get_all_toppings(db:Session=Depends(get_db),user:User=Depends(get_current_user),response_model=List):
     #1. Accessing all topping in database
     toppings=db.query(ToppingModel).all()
     #2.Check whether Toppings are present or not

@@ -32,7 +32,7 @@ class Pizza_Model(Base):
     id = Column(Integer, primary_key=True) # Primary keys are indexed by default
     
     # Keep index here: You will search/filter by name often
-    name = Column(String(100), index=True, nullable=False) 
+    name = Column(String(100), index=True,unique=True, nullable=False) 
     
     # Remove index: Too long for a standard B-Tree index
     description = Column(String(500), nullable=False)

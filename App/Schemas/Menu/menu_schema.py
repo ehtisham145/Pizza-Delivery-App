@@ -40,6 +40,8 @@ class Pizza_Request(BaseModel):
 class Pizza_Response(BaseModel):
     id: int
     name:str
+    base_price:int
+    is_available:bool
     created_at: datetime
     updated_at: datetime
     
@@ -88,7 +90,16 @@ class Size_Response(Size_Request):
 class Topping_Request(BaseModel):    
     name:str=Field(...,min_length=5,max_length=100)
     extra_price:float=Field(gt=0)
-    is_available:bool=True
+    is_availble:bool=True
+
+    model_config={
+        "from_attributes": True
+    }
+
+class Topping_Response(BaseModel):
+    name:str
+    extra_price:float
+    is_availble:bool
 
     model_config={
         "from_attributes": True

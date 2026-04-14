@@ -38,5 +38,3 @@ def update_user_role(user_email: str, new_role: str):
 # Admin banane ke liye
 update_user_role("ehtisham2406@gmail.com", "admin")
 
-# Staff banane ke liye
-update_user_role("some_staff@gmail.com", "staff")
