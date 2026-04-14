@@ -115,5 +115,3 @@ python -m App.Database.init_db
 
 # Start the development server
 uvicorn main:app --reload
-
-This is Ehtihsam loves ro

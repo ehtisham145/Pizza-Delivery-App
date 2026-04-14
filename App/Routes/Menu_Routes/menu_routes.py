@@ -1,4 +1,4 @@
-from fastapi import FastAPI,HTTPException,APIRouter,status,Depends
+from fastapi import FastAPI,HTTPException,APIRouter,status,Depends,Form
 from App.Utils.middleware import get_current_user
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
@@ -6,6 +6,7 @@ from typing import Optional
 from App.Database.database import get_db
 from App.DataModels.Auth_Users.user_model import User
 from typing import List
+from App.Utils.constant import PizzaCategoryEnum,PizzaSizeEnum
 from App.DataModels.Menu_Model.menu_model import Category_Model,Pizza_Model,Size_Model,ToppingModel 
 from App.Schemas.Menu.menu_schema import Category_Request,Category_Response,Pizza_Request,Pizza_Response,Size_Response,Size_Request,Topping_Request 
 #Creating a Router for Menu related work
@@ -129,15 +130,15 @@ def delete_pizza(pizza_id: int, db: Session = Depends(get_db), user: User = Depe
 
 #==================Create Categories in Datavase (Admin)===========================
 @menu_router.post("/Create_Category",status_code=status.HTTP_201_CREATED,response_model=Category_Response)
-def Create_Category(category:Category_Request,db:Session=Depends(get_db),user:User=Depends(get_current_user)):
+def Create_Category(name:PizzaCategoryEnum=Form(...),description: str = Form(None),db:Session=Depends(get_db),user:User=Depends(get_current_user)):
     #1.Guard Check
     if user.role!="admin":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,detail="Only Admin can add the categories for pizza in DataBase !")
     
     #2.Create Categories
     new_category=Category_Model(
-            name=category.name,
-            description=category.description
+            name=name,
+            description=description
         )
     #3.Adding Category in Database
     db.add(new_category)

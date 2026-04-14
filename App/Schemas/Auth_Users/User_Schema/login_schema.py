@@ -1,7 +1,7 @@
 from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
 from App.Schemas.Auth_Users.Token_Schema.refresh_token_schema import RefreshTokenRequest
-# ----------------- Login Request --------------------
+# ----------------- Login Request -----------------
 class UserLoginSchema(BaseModel):
     """
     Schema for capturing login credentials.
@@ -23,5 +23,5 @@ class UserLoginResponseSchema(BaseModel):
     full_name:str
 
     model_config={
-        "from_attributes": True
+        "form_attributes":True
     }
