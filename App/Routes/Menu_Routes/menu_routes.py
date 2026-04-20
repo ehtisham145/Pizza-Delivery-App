@@ -46,7 +46,7 @@ def create_pizza(pizza:Pizza_Request,db:Session=Depends(get_db),user:User=Depend
 #=====================Getting All Pizzas===================
 @menu_router.get("/Get_all_pizzas",status_code=status.HTTP_200_OK,response_model=List[Pizza_Response])
 def Get_all_pizza(db:Session=Depends(get_db),user:User=Depends(get_current_user)):
-        pizzas=db.query(Pizza_Model).filter(Pizza_Model.is_available==True).all()
+        pizzas=db.query(Pizza_Model).all()
         if not pizzas:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="No Pizza is added in Database yet")
         #Show only Availble Pizzas
@@ -91,9 +91,12 @@ def Update_Pizza(pizza:Pizza_Request,pizza_id:int,db:Session=Depends(get_db),use
 @menu_router.put("/Update_Pizza_Status/{pizza_id:int}",status_code=status.HTTP_200_OK)
 def Update_Pizza_Status(pizza_data:Pizza_Request,pizza_id:int,db:Session=Depends(get_db),user:User=Depends(get_current_user)):
     #1.Guard Check
-    if user.role!="staff" or user.role!="admin":
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="Only Admin or Staff Memeber can Update Pizza Status !")
-    #2.Search for Pizza id
+    allowed_roles = ["admin", "staff"]
+    if user.role not in allowed_roles:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, # Authorization ke liye 403 behtar hai
+            detail="Only Admin or Staff Member can Update Pizza Status!"
+        )
     db_pizza=db.query(Pizza_Model).filter(Pizza_Model.id==pizza_id).first()
     #3.If Pizza not found
     if not db_pizza:
@@ -104,39 +107,43 @@ def Update_Pizza_Status(pizza_data:Pizza_Request,pizza_id:int,db:Session=Depends
     #5.In Data Base
     db.add(db_pizza)
     db.commit()
-    db.refresh()
+    db.refresh(db_pizza)
 
     return db_pizza
 
 
-#=====================Delete a Pizza (Admin)===================
-@menu_router.delete("/pizzas/{pizza_id}", status_code=status.HTTP_200_OK)
+#===================== Soft Delete Pizza (Admin/Staff Only) ===================
+@menu_router.put("/pizzas/{pizza_id}", status_code=status.HTTP_200_OK)
 def delete_pizza(pizza_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    allowed_roles=["admin","staff"]
-    # 1. Authorization Guard
+
+    allowed_roles = ["admin", "staff"]
+    
+    # 1. Authorization Guard: Verify if the user has permission
     if user.role not in allowed_roles:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, 
-            detail="Only Admin can delete a pizza."
+            detail="Access Denied: You do not have permission to delete menu items."
         )
 
-    # 2. Fetch the pizza
+    # 2. Database Lookup: Fetch the specific pizza record
     pizza = db.query(Pizza_Model).filter(Pizza_Model.id == pizza_id).first()
     
-    # 3. Guard: Not Found
+    # 3. Validation Guard: Check if the resource exists
     if not pizza:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, 
-            detail="Pizza with this id is not found in data base"
+            detail=f"Pizza with ID {pizza_id} was not found."
         )
 
-    # 4. Execution
-    # We don't need a try/except here because your main.py handles it!
-    Pizza_Model.is_deleted==True
-    
-    db.commit()
-    return {"message": "Pizza deleted successfully"}
+    # 4. Soft Delete Execution: Update flags instead of row removal
+    pizza.is_deleted = True
+    pizza.is_available = False
 
+    # 5. Persistence: Commit changes to the database
+    db.commit()
+    db.refresh(pizza)
+    
+    return {"message": "Pizza successfully deactivated and hidden from the menu."}
 #==================Create Categories in Datavase (Admin)===========================
 @menu_router.post("/Create_Category",status_code=status.HTTP_201_CREATED,response_model=Category_Response)
 def Create_Category(name:PizzaCategoryEnum=Form(...),description: str = Form(None),db:Session=Depends(get_db),user:User=Depends(get_current_user)):

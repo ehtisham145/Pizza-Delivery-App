@@ -1,6 +1,8 @@
 from App.Database.database import Base
 from sqlalchemy import Column, Integer, Text, String, Boolean, DateTime
 from datetime import datetime
+from sqlalchemy.orm import relationship
+from App.DataModels.Cart.cart_model import Cart
 
 class User(Base):
     """
@@ -30,6 +32,9 @@ class User(Base):
     # updated_at: Automatically refreshes every time the row is modified
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+    #Relationship
+    cart = relationship("Cart", back_populates="owner", uselist=False, cascade="all, delete-orphan")
+    
     # ------------------ Object Representation ------------------------
     # The __repr__ method returns a string representation of the object.
     # It is used for debugging; instead of a memory address, 
