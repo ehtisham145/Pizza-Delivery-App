@@ -27,7 +27,7 @@ class Category_Model(Base):
 
 class Pizza_Model(Base):
 
-    __tablename__ = "pizzas" # Table names are usually plural by convention
+    __tablename__ = "pizza" # Table names are usually plural by convention
 
     id = Column(Integer, primary_key=True) # Primary keys are indexed by default
     

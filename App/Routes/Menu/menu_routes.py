@@ -7,7 +7,7 @@ from App.Database.database import get_db
 from App.DataModels.Auth_Users.user_model import User
 from typing import List
 from App.Utils.constant import PizzaCategoryEnum,PizzaSizeEnum
-from App.DataModels.Menu_Model.menu_model import Category_Model,Pizza_Model,Size_Model,ToppingModel 
+from App.DataModels.Menu.menu_model import Category_Model,Pizza_Model,Size_Model,ToppingModel 
 from App.Schemas.Menu.menu_schema import Category_Request,Category_Response,Pizza_Request,Pizza_Response,Size_Response,Size_Request,Topping_Request,Topping_Response 
 #Creating a Router for Menu related work
 menu_router=APIRouter()

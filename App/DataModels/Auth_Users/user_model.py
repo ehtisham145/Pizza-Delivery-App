@@ -2,7 +2,7 @@ from App.Database.database import Base
 from sqlalchemy import Column, Integer, Text, String, Boolean, DateTime
 from datetime import datetime
 from sqlalchemy.orm import relationship
-from App.DataModels.Cart.cart_model import Cart
+from App.DataModels.Cart.cart_model import Cart_Model
 
 class User(Base):
     """
@@ -33,7 +33,7 @@ class User(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     #Relationship
-    cart = relationship("Cart", back_populates="owner", uselist=False, cascade="all, delete-orphan")
+    cart = relationship("Cart_Model", back_populates="owner", uselist=False, cascade="all, delete-orphan")
     
     # ------------------ Object Representation ------------------------
     # The __repr__ method returns a string representation of the object.

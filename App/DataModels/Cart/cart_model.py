@@ -2,8 +2,8 @@ from sqlalchemy.orm import Session
 from App.Database.database import Base
 from sqlalchemy import Column,Integer,String,Float,Boolean,DateTime,ForeignKey,Numeric
 from sqlalchemy.orm import relationship
-from App.DataModels.Auth_Users.user_model import User 
 import datetime
+from App.DataModels.Menu.menu_model import Pizza_Model,Size_Model
 
 #========================Cart Table========================
 class Cart_Model(Base):
@@ -31,11 +31,10 @@ class Cart_Item(Base):
 
     #Relationship
     cart = relationship("Cart_Model", back_populates="items")
-    pizza = relationship("Pizza") # Pizza table se name lene ke liye
-    size_relationship = relationship("Size") # Size table se name lene ke liye
+    pizza = relationship("Pizza_Model") 
+    size_relationship = relationship("Size_Model") 
     toppings = relationship("Cart_Item_Topping", back_populates="cart_item")
 
-ss
 #========================Cart Item Topping Table==================
 class Cart_Item_Topping(Base):
     __tablename__ = "cart_toppings"
