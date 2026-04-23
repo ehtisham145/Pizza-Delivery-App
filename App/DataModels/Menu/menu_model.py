@@ -1,5 +1,6 @@
 from sqlalchemy import Integer,Column,Table,String,DateTime,Boolean,ForeignKey,Float,Enum as SQLEnum
 from App.Utils.constant import PizzaCategoryEnum,PizzaSizeEnum
+from sqlalchemy.orm import relationship
 from App.Database.database import Base
 from typing import Optional
 from datetime import datetime
@@ -58,6 +59,9 @@ class Pizza_Model(Base):
     # onupdate ensures the timestamp refreshes whenever the row is edited
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+    #Relationship
+
+    piz=relationship("Cart_Item",back_populates="piza")
     def __repr__(self): # Check whether data table is working correctly in Database
         return f"<Pizza(name={self.name}, size={self.description})>"
 
@@ -70,7 +74,8 @@ class Size_Model(Base):
     size=Column(SQLEnum(PizzaSizeEnum),nullable=False)
     price_multiplier = Column(Float, nullable=False, default=1.0)
 
-    
+    #Relationship
+    siz=relationship("Cart_Item",back_populates="size_relationship")
     def __repr__(self): # Check whether data table is working correctly in Database
         return f"<Size(name={self.name}, size={self.size})>"
 
@@ -102,6 +107,7 @@ class ToppingModel(Base):
     extra_price=Column(Float,index=True,nullable=False)
 
     is_availble=Column(Boolean,default=True,index=True)
+
 
     def __repr__(self): # Check whether data table is working correctly in Database
         return f"<Topping (name={self.name}, size={self.extra_price})>"

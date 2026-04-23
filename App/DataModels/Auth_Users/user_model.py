@@ -32,6 +32,8 @@ class User(Base):
     # updated_at: Automatically refreshes every time the row is modified
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+    
+    
     #Relationship
     cart = relationship("Cart_Model", back_populates="owner", uselist=False, cascade="all, delete-orphan")
     

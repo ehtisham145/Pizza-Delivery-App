@@ -12,6 +12,7 @@ class Cart_Model(Base):
     user_id=Column(Integer,ForeignKey("users.id"),unique=True,index=True,nullable=False)
     created_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow, nullable=False)
+
     #Relationship
     items=relationship("Cart_Item",back_populates="cart",cascade="all, delete-orphan")
     owner=relationship("User",back_populates="cart")
@@ -31,15 +32,16 @@ class Cart_Item(Base):
 
     #Relationship
     cart = relationship("Cart_Model", back_populates="items")
-    pizza = relationship("Pizza_Model") 
-    size_relationship = relationship("Size_Model") 
+    piza = relationship("Pizza_Model",back_populates="piz") 
+    size_relationship = relationship("Size_Model",back_populates="siz") 
     toppings = relationship("Cart_Item_Topping", back_populates="cart_item")
+
 
 #========================Cart Item Topping Table==================
 class Cart_Item_Topping(Base):
     __tablename__ = "cart_toppings"
-    # Dono par primary_key=True lazmi hai
     cart_item_id = Column(Integer, ForeignKey("cart_items.id"), primary_key=True, nullable=False)
     topping_id = Column(Integer, ForeignKey("toppings.id"), primary_key=True, nullable=False)
 
+    #Relationship
     cart_item = relationship("Cart_Item", back_populates="toppings")

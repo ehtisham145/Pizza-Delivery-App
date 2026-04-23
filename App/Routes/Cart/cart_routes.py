@@ -53,7 +53,10 @@ def delete_entire_cart(db:Session=Depends(get_db),user:User=Depends(get_current_
 @cart_router.delete("/Delete_Cart_Item/{item_id}",status_code=status.HTTP_200_OK)
 def delete_cart_item(item_id:int,db:Session=Depends(get_db),user:User=Depends(get_current_user)):
     #Fetching Data from Data Base
-    db_cart_item=db.query(Cart_Model).filter(Cart_Model.item_id==item_id,Cart_Model.user_id==user.id).first()
+    db_cart_item = db.query(Cart_Item).join(Cart_Model).filter(
+        Cart_Item.id == item_id,       
+        Cart_Model.user_id == user.id    
+    ).first()
     #Return Error
     if not db_cart_item:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Item not Found in Cart")
