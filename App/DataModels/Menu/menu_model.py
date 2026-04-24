@@ -9,7 +9,7 @@ import enum
 
 class Category_Model(Base):
     
-    __tablename__="Categories"
+    __tablename__="categories"
     
     id=Column(Integer,primary_key=True,index=True)
     

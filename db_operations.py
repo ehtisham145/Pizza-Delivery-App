@@ -1,7 +1,11 @@
 from App.Database.database import get_db 
 from App.DataModels.Auth_Users.user_model import User 
 from sqlalchemy.orm import Session
+from App.DataModels.Menu.menu_model import Category_Model
+from sqlalchemy import text
+from sqlalchemy import inspect
 
+#============================User Role Upgradation===============================
 def update_user_role(user_email: str, new_role: str):
     """
     Generic function to update user roles safely.
@@ -34,7 +38,52 @@ def update_user_role(user_email: str, new_role: str):
     finally:
         db.close()
 
-# --- Execution ---
-# Admin banane ke liye
-update_user_role("ehtisham2406@gmail.com", "admin")
 
+#=============================Rename Table in SQL Alchmey=============================
+def rename_sqlite_table_casing(old_name, new_name):
+    db_gen = get_db()
+    db = next(db_gen)
+    
+    # We use a middle-man name to trick SQLite
+    temp_name = f"{old_name}_temp"
+    
+    try:
+        # 1. Rename to a temporary name
+        db.execute(text(f"ALTER TABLE {old_name} RENAME TO {temp_name}"))
+        print(f"Step 1: Moved to {temp_name}")
+        
+        # 2. Rename from temporary to the final lowercase name
+        db.execute(text(f"ALTER TABLE {temp_name} RENAME TO {new_name}"))
+        print(f"Step 2: Moved to {new_name}")
+        
+        db.commit()
+        print("✅ Success! Table casing updated.")
+    except Exception as e:
+        db.rollback()
+        print(f"❌ Failed: {e}")
+
+#===========================Delete a Table from Data Base=========================
+def delete_table(table_name:str):
+    db_gen=get_db()
+    db=next(db_gen)
+
+    query=text(f"DROP TABLE IF EXISTS {table_name}")
+
+    try:
+        db.execute(query)
+        db.commit()
+
+    except Exception as e:
+        db.rollback()
+        print(f"Error : {e}")
+
+delete_table("pizzas")
+def check_tables():
+    db_gen = get_db()
+    db = next(db_gen)
+    inspector = inspect(db.get_bind())
+    tables = inspector.get_table_names()
+    print("Current tables in database:", tables)
+
+if __name__ == "__main__":
+    check_tables()

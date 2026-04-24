@@ -5,11 +5,13 @@ from App.Routes.Auth_Users.login_register import get_current_user
 from App.DataModels.Auth_Users.user_model import User
 from App.DataModels.Cart.cart_model import Cart_Model,Cart_Item
 from App.DataModels.Menu.menu_model import Pizza_Model
+from typing import List
+from App.Schemas.Cart.cart_schema import CartResponseSchema
 #==========================Developing Router for Cart Menu=====================
 cart_router=APIRouter()
 
 #======================Customer	Get my cart with all items + total============
-@cart_router.get("/get_your_cart",status_code=status.HTTP_200_OK)
+@cart_router.get("/get_your_cart",response_model=List[CartResponseSchema],status_code=status.HTTP_200_OK)
 def get_cart(db:Session=Depends(get_db),user:User=Depends(get_current_user)):
     #Fetcing Data From Data Base
     cart_item=db.query(Cart_Model).filter(Cart_Model.user_id==user.id).all()
