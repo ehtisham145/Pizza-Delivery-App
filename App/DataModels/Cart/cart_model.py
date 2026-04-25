@@ -20,7 +20,7 @@ class Cart_Model(Base):
     #Handling Prices and Other Features
     @property
     def total_price(self):
-        return sum(item.sub_total for item in self.items) if self.items else 0.0
+        return round(sum(item.sub_total for item in self.items),2) if self.items else 0.0
 
     @property
     def item_count(self):
@@ -37,7 +37,7 @@ class Cart_Item(Base):
     size=Column(String,nullable=False)
     quantity=Column(Integer,default=1,nullable=False)
     unit_price=Column(Float,nullable=False)
-    sub_total=Column(Float,nullable=False)
+    sub_total=Column(Integer,nullable=False)
 
     #Relationship
     cart = relationship("Cart_Model", back_populates="items")

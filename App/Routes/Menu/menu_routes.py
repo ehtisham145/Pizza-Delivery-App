@@ -198,7 +198,7 @@ def create_topping(topping_data:Topping_Request,db:Session=Depends(get_db),user:
 
 #=============List All Topping==============================
 @menu_router.get("/All_Toppings",status_code=status.HTTP_200_OK,response_model=List[Topping_Response])
-def get_all_toppings(db:Session=Depends(get_db),user:User=Depends(get_current_user),response_model=List):
+def get_all_toppings(db:Session=Depends(get_db),user:User=Depends(get_current_user)):
     #1. Accessing all topping in database
     toppings=db.query(ToppingModel).all()
     #2.Check whether Toppings are present or not

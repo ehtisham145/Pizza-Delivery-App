@@ -90,7 +90,7 @@ class Size_Response(Size_Request):
 class Topping_Request(BaseModel):    
     name:str=Field(...,min_length=5,max_length=100)
     extra_price:float=Field(gt=0)
-    is_availble:bool=True
+    is_available:bool=True
 
     model_config={
         "from_attributes": True
@@ -99,7 +99,7 @@ class Topping_Request(BaseModel):
 class Topping_Response(BaseModel):
     name:str
     extra_price:float
-    is_availble:bool
+    is_available:bool
 
     model_config={
         "from_attributes": True

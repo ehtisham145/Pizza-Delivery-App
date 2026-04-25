@@ -106,7 +106,7 @@ class ToppingModel(Base):
     
     extra_price=Column(Float,index=True,nullable=False)
 
-    is_availble=Column(Boolean,default=True,index=True)
+    is_available=Column(Boolean,default=True,index=True)
 
 
     def __repr__(self): # Check whether data table is working correctly in Database

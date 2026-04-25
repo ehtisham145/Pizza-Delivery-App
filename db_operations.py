@@ -101,6 +101,7 @@ def seed_sizes():
     
     return {"message": "Data check complete, sizes seeded if table was empty."}
 
+
 def check_tables():
     db_gen = get_db()
     db = next(db_gen)
@@ -108,5 +109,6 @@ def check_tables():
     tables = inspector.get_table_names()
     print("Current tables in database:", tables)
 
+update_user_role("ehtisham2406@gmail.com", "admin")
 if __name__ == "__main__":
     seed_sizes()

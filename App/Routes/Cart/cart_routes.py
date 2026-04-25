@@ -15,30 +15,47 @@ cart_router=APIRouter()
 @cart_router.get("/get_your_cart", response_model=List[CartResponseSchema])
 def get_cart(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     # Use joinedload to ensure 'items' are fetched along with the cart
+    db.expire_all()
     cart_items = db.query(Cart_Model).options(
         joinedload(Cart_Model.items)
     ).filter(Cart_Model.user_id == user.id).all()
     
     if not cart_items:
         raise HTTPException(status_code=404, detail="Cart is empty")
-        
+    
     return cart_items
 
 #====================Update Cart Item Quantity (Customer)=================================
-@cart_router.put("/Update_cart_Item_quantity",status_code=status.HTTP_200_OK)
-def Update_cart_Item_quantity(quantity:int,item_id:int,db:Session=Depends(get_db),user:User=Depends(get_current_user)):
-   #Fetcing Data From Data Base
-    db_item=db.query(Cart_Model).filter(Cart_Model.id==item_id,Cart_Model.user_id==user.id).first()
-    #Return Error
-    if not db_item:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Item not found in Cart Menu !")
-    #Updating Quantity in database
-    db_item.quantity=quantity
-    db.commit()
-    db.refresh(db_item)
-    #Return Result
-    return db_item
+@cart_router.put("/Update_cart_Item_quantity", status_code=status.HTTP_200_OK)
+def Update_cart_Item_quantity(quantity: int, item_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     
+    # 1. Get the user's cart
+    user_cart = db.query(Cart_Model).filter(Cart_Model.user_id == user.id).first()
+
+# 2. Update the item inside that specific cart
+    db_item = db.query(Cart_Item).filter(
+        Cart_Item.id == item_id,
+        Cart_Item.cart_id == user_cart.id,
+        Pizza_Model.is_deleted == False
+    ).first()
+
+    if not db_item:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    # 2. Update the attribute explicitly
+    db_item.quantity = quantity
+    
+    # 3. Mark the object as "dirty" to ensure SQLAlchemy knows it changed
+    db.add(db_item) 
+    
+    try:
+        db.commit()
+        db.refresh(db_item)
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Database Error: {str(e)}")
+
+    return db_item
 
 #=================Delete Customer Clear entire cart======================================
 @cart_router.delete("/Delete_Entire_Cart",status_code=status.HTTP_200_OK)
@@ -117,7 +134,7 @@ def add_item_to_cart(
             cart_id=user_cart.id,
             pizza_id=item_id,
             size_id=size_obj.id,
-            size=str(size_obj.size),  # FIX: Passing the required string to avoid IntegrityError
+            size=size_obj.size,  # FIX: Passing the required string to avoid IntegrityError
             quantity=item_data.quantity,
             unit_price=unit_price,
             sub_total=sub_total

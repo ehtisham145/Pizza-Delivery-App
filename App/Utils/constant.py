@@ -12,3 +12,15 @@ class PizzaSizeEnum(str, Enum):
     MEDIUM = "medium"
     LARGE = "large"
     XLARGE="x-large"
+
+
+class PizzaToppingEnum(str, Enum):
+    EXTRA_CHEESE = "Extra Cheese"
+    PEPPERONI = "Pepperoni"
+    MUSHROOMS = "Mushrooms"
+    ONIONS = "Onions"
+    OLIVES = "Olives"
+    GREEN_PEPPERS = "Green Peppers"
+    CHICKEN_TIKKA = "Chicken Tikka"
+    JALAPENOS = "Jalapenos"
+    BEEF_PEPPERONI = "Beef Pepperoni"
