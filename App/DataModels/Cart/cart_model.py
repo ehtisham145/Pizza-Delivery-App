@@ -10,13 +10,21 @@ class Cart_Model(Base):
     __tablename__="cart"
     id=Column(Integer,primary_key=True,index=True)
     user_id=Column(Integer,ForeignKey("users.id"),unique=True,index=True,nullable=False)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow, nullable=False)
+    # created_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    # updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow, nullable=False)
 
     #Relationship
     items=relationship("Cart_Item",back_populates="cart",cascade="all, delete-orphan")
     owner=relationship("User",back_populates="cart")
 
+    #Handling Prices and Other Features
+    @property
+    def total_price(self):
+        return sum(item.sub_total for item in self.items) if self.items else 0.0
+
+    @property
+    def item_count(self):
+        return len(self.items) if self.items else 0
 
 #=========================Cart Items===========================
 class Cart_Item(Base):
@@ -26,6 +34,7 @@ class Cart_Item(Base):
     cart_id=Column(Integer,ForeignKey("cart.id"),index=True,nullable=False)
     pizza_id=Column(Integer,ForeignKey("pizza.id"),index=True,nullable=False)
     size_id=Column(Integer,ForeignKey("size.id"),index=True,nullable=False)
+    size=Column(String,nullable=False)
     quantity=Column(Integer,default=1,nullable=False)
     unit_price=Column(Float,nullable=False)
     sub_total=Column(Float,nullable=False)

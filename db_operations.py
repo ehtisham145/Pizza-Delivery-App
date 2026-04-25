@@ -1,9 +1,9 @@
 from App.Database.database import get_db 
 from App.DataModels.Auth_Users.user_model import User 
 from sqlalchemy.orm import Session
-from App.DataModels.Menu.menu_model import Category_Model
-from sqlalchemy import text
-from sqlalchemy import inspect
+from App.DataModels.Menu.menu_model import Category_Model,Size_Model
+from sqlalchemy import text,inspect
+from App.Utils.constant import PizzaSizeEnum
 
 #============================User Role Upgradation===============================
 def update_user_role(user_email: str, new_role: str):
@@ -77,7 +77,30 @@ def delete_table(table_name:str):
         db.rollback()
         print(f"Error : {e}")
 
-delete_table("pizzas")
+
+def seed_sizes():
+    db_gen = get_db()
+    db = next(db_gen)
+    
+    # FIX 1: Added () to .count()
+    if db.query(Size_Model).count() == 0:
+        sizes = [
+            Size_Model(size=PizzaSizeEnum.SMALL, price_multiplier=0.8),
+            Size_Model(size=PizzaSizeEnum.MEDIUM, price_multiplier=1.0),
+            Size_Model(size=PizzaSizeEnum.LARGE, price_multiplier=1.5),
+            Size_Model(size=PizzaSizeEnum.XLARGE, price_multiplier=2.0),
+        ]
+        db.add_all(sizes)
+        db.commit()
+        print("Sizes seeded successfully!")
+    else:
+        print("Sizes already exist in the database.")
+    
+    # FIX 2: Close the database session outside the if block
+    db.close() 
+    
+    return {"message": "Data check complete, sizes seeded if table was empty."}
+
 def check_tables():
     db_gen = get_db()
     db = next(db_gen)
@@ -86,4 +109,4 @@ def check_tables():
     print("Current tables in database:", tables)
 
 if __name__ == "__main__":
-    check_tables()
+    seed_sizes()

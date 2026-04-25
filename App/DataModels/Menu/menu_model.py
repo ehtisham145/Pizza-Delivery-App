@@ -51,7 +51,7 @@ class Pizza_Model(Base):
     is_available = Column(Boolean, default=True, index=True)
     
     # Fixed Foreign Key (Assumes your category table is named 'categories')
-    category_id = Column(Integer, ForeignKey("Categories.id"), nullable=False)
+    category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
     
     # Use datetime.utcnow (no brackets) so it generates a new time for every entry
     created_at = Column(DateTime, default=datetime.utcnow)

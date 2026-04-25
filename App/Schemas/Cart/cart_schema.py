@@ -1,13 +1,14 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional
 from datetime import datetime
+from App.Schemas.Menu.menu_schema import Pizza_Request
 
 # 1. Add to Cart (User input ke liye)
 class AddToCartSchema(BaseModel):
     pizza_id: int = Field(..., gt=0, description="Pizza ki ID honi chahiye")
     size_id: int = Field(..., gt=0)
-    quantity: int = Field(default=1, gt=0, le=10) # Max 10 pizzas aik item mein
-    topping_ids: Optional[List[int]] = [] # Toppings optional ho sakti hain
+    quantity: int = Field(default=1, gt=0, le=10) # Max 10 pizzas
+    topping_ids: Optional[List[int]] = Field(default_factory=list)
 
 # 2. Update Cart Item (Sirf quantity badalne ke liye)
 class UpdateCartItemSchema(BaseModel):
@@ -26,12 +27,11 @@ class ToppingInfo(BaseModel):
 # 3. Cart Item Response
 class CartItemResponseSchema(BaseModel):
     id: int
-    pizza_name: str
     size: str
     quantity: int
     unit_price: float
-    subtotal: float
-    toppings: List[ToppingInfo] = []
+    sub_total: float
+    piza:Pizza_Request
 
     class Config:
         from_attributes = True

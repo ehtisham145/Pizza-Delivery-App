@@ -11,3 +11,4 @@ class PizzaSizeEnum(str, Enum):
     SMALL = "small"
     MEDIUM = "medium"
     LARGE = "large"
+    XLARGE="x-large"
