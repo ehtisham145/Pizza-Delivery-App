@@ -4,6 +4,7 @@ from sqlalchemy.orm import relationship
 from App.Database.database import Base
 from typing import Optional
 from datetime import datetime
+from App.DataModels.Order.order_model import Order_Model
 import enum
 #=========================Category Table===========================
 
@@ -62,6 +63,7 @@ class Pizza_Model(Base):
     #Relationship
 
     piz=relationship("Cart_Item",back_populates="piza")
+    order_relationship=relationship("Order_Item_Model",back_populates="pizza_relationship")
     def __repr__(self): # Check whether data table is working correctly in Database
         return f"<Pizza(name={self.name}, size={self.description})>"
 

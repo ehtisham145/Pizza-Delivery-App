@@ -24,3 +24,9 @@ class PizzaToppingEnum(str, Enum):
     CHICKEN_TIKKA = "Chicken Tikka"
     JALAPENOS = "Jalapenos"
     BEEF_PEPPERONI = "Beef Pepperoni"
+    
+
+class OrderStatusEnum(str, Enum):
+    PENDING = "Pending"        
+    DELIVERED = "Delivered"      
+    CANCELLED = "Cancelled"   

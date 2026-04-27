@@ -2,7 +2,8 @@ from App.Database.database import Base
 from sqlalchemy import Column, Integer, Text, String, Boolean, DateTime
 from datetime import datetime
 from sqlalchemy.orm import relationship
-from App.DataModels.Cart.cart_model import Cart_Model
+# from App.DataModels.Cart.cart_model import Cart_Model
+# from App.DataModels.Order.order_model import Order_Model
 
 class User(Base):
     """
@@ -36,7 +37,7 @@ class User(Base):
     
     #Relationship
     cart = relationship("Cart_Model", back_populates="owner", uselist=False, cascade="all, delete-orphan")
-    
+    order_relationship=relationship("Order_Model",back_populates="user_relationship")
     # ------------------ Object Representation ------------------------
     # The __repr__ method returns a string representation of the object.
     # It is used for debugging; instead of a memory address, 
