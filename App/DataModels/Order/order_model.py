@@ -25,8 +25,9 @@ class Order_Model(Base):
 class Order_Item_Model(Base):
     __tablename__="order_items"
     id=Column(Integer,primary_key=True)
-    order_id=Column(Integer,ForeignKey("orders.id"),index=True) #Foreign  Key
+    order_id = Column(UUID(as_uuid=True), ForeignKey("orders.id"), index=True) #Foreign  Key
     pizza_id=Column(Integer,ForeignKey("pizza.id"),index=True) #Foreign  Key
+    pizza_name=Column(String,nullable=False)
     size_name=Column(SQLEnum(PizzaSizeEnum),nullable=False)
     quantity=Column(Integer,nullable=False,default=0)
     unit_price=Column(Float,nullable=False)

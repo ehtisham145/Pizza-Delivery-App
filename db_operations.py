@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from App.DataModels.Menu.menu_model import Category_Model,Size_Model
 from sqlalchemy import text,inspect
 from App.Utils.constant import PizzaSizeEnum
-
+from App.DataModels.Order.order_model import Order_Model
 #============================User Role Upgradation===============================
 def update_user_role(user_email: str, new_role: str):
     """
@@ -77,7 +77,7 @@ def delete_table(table_name:str):
         db.rollback()
         print(f"Error : {e}")
 
-
+#==========================Adding Sizes=======================================
 def seed_sizes():
     db_gen = get_db()
     db = next(db_gen)
@@ -102,6 +102,44 @@ def seed_sizes():
     return {"message": "Data check complete, sizes seeded if table was empty."}
 
 
+#==============================Delete All Records From Table=========================
+
+def truncate_orders():
+    db_gen = get_db()
+    db = next(db_gen)
+    
+    try:
+        db.execute(text("DELETE FROM cart")) 
+        db.execute(text("DELETE FROM cart_items"))
+        db.execute(text("DELETE FROM order_items")) 
+        db.execute(text("DELETE FROM orders"))
+        db.commit()
+        return {"status": "success", "message": "SQLite tables cleared successfully!"}
+        
+    except Exception as e:
+        db.rollback()
+        print(f"Error occurred: {e}")
+        return {"status": "error", "message": str(e)}
+        
+    finally:
+        db.close()
+
+#============================Drop Tables===============================
+def drop_tables():
+    db_gen=get_db()
+    db=next(db_gen)
+
+    try:
+        db.execute(text("DROP TABLE IF EXISTS orders"))
+        db.execute(text("DROP TABLE IF EXISTS order_items"))
+
+        return "Tables Deleted Successfully"
+    except Exception as e:
+        print(f"Error : {e}")
+
+
+#===============================Checking Tables in DataBase===========================
+
 def check_tables():
     db_gen = get_db()
     db = next(db_gen)
@@ -109,6 +147,14 @@ def check_tables():
     tables = inspector.get_table_names()
     print("Current tables in database:", tables)
 
-update_user_role("ehtisham2406@gmail.com", "admin")
+# # update_user_role("ehtisham2406@gmail.com", "admin")
+
+
+
+
 if __name__ == "__main__":
-    seed_sizes()
+    # result=truncate_orders()
+    # print(result)
+    result=drop_tables()
+    print(result)
+

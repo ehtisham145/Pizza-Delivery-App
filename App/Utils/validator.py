@@ -1,5 +1,5 @@
 import re
-
+from uuid import UUID
 #---------------Validate your Password----------------------
 def validate_password_strength(v: str) -> str:
     # 1. Explicit Length Check
@@ -37,3 +37,12 @@ def validate_phone_no(v: str) -> str:
         )
     
     return clean_number
+
+def validate_uuid(id_str: str, entity_name: str = "ID"):
+    try:
+        return UUID(id_str)
+    except (ValueError, AttributeError):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid {entity_name} format. Expected a valid UUID."
+        )

@@ -75,12 +75,12 @@ extra_price	Float	snapshot
 📡 API Endpoints
 Method	URL	Who	What
 POST	/api/v1/orders	Customer	Place order from cart   --done
-GET	/api/v1/orders/my-orders	Customer	My order history
-GET	/api/v1/orders/my-orders/{id}	Customer	My single order detail
-PATCH	/api/v1/orders/{id}/cancel	Customer	Cancel if still pending
-GET	/api/v1/orders	Staff/Admin	All orders list
-GET	/api/v1/orders/{id}	Staff/Admin	Any order detail
-PATCH	/api/v1/orders/{id}/status	Staff/Admin	Update order status
+GET	/api/v1/orders/my-orders	Customer	My order history 
+GET	/api/v1/orders/my-orders/{id}	Customer	My single order detail  --done
+PATCH	/api/v1/orders/{id}/cancel	Customer	Cancel if still pending --done
+GET	/api/v1/orders	Staff/Admin	All orders list  --done
+GET	/api/v1/orders/{id}	Staff/Admin	Any order detail --done
+PATCH	/api/v1/orders/{id}/status	Staff/Admin	Update order status --done
 ⚙️ Status Flow Rules — Very Important
 pending → confirmed → preparing → out_for_delivery → delivered
                                                     ↑
