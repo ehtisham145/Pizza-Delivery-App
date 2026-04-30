@@ -155,3 +155,4 @@ update_user_role("ehtishamexp@gmail.com", "admin")
 # if __name__ == "__main__":
 #     drop_tables()
     
+# ..
