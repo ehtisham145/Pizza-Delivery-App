@@ -147,11 +147,11 @@ def check_tables():
     tables = inspector.get_table_names()
     print("Current tables in database:", tables)
 
-# update_user_role("ehtishamexp@gmail.com", "admin")
+update_user_role("ehtishamexp@gmail.com", "admin")
 
 
 
 
-if __name__ == "__main__":
-    drop_tables()
+# if __name__ == "__main__":
+#     drop_tables()
     
