@@ -130,10 +130,10 @@ def drop_tables():
     db=next(db_gen)
 
     try:
-        db.execute(text("DROP TABLE IF EXISTS orders"))
-        db.execute(text("DROP TABLE IF EXISTS order_items"))
+        db.execute(text("DROP TABLE IF EXISTS cart"))
+        db.execute(text("DROP TABLE IF EXISTS cart_items"))
 
-        return "Tables Deleted Successfully"
+        print("Tables Deleted Successfully")
     except Exception as e:
         print(f"Error : {e}")
 
@@ -147,14 +147,11 @@ def check_tables():
     tables = inspector.get_table_names()
     print("Current tables in database:", tables)
 
-# # update_user_role("ehtisham2406@gmail.com", "admin")
+# update_user_role("ehtishamexp@gmail.com", "admin")
 
 
 
 
 if __name__ == "__main__":
-    # result=truncate_orders()
-    # print(result)
-    result=drop_tables()
-    print(result)
-
+    drop_tables()
+    

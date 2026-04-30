@@ -8,10 +8,10 @@ class PizzaCategoryEnum(str, Enum):
     FUSION = "Gourmet Fusion"
 
 class PizzaSizeEnum(str, Enum):
-    SMALL = "small"
-    MEDIUM = "medium"
-    LARGE = "large"
-    XLARGE="x-large"
+    SMALL = "Small"
+    MEDIUM = "Medium"
+    LARGE = "Large"
+    EXTRA_LARGE="X-large"
 
 
 class PizzaToppingEnum(str, Enum):

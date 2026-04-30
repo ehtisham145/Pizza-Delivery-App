@@ -2,6 +2,7 @@ from fastapi import APIRouter,HTTPException,Depends,status
 from App.Database.database import get_db
 from sqlalchemy.orm import Session,joinedload
 from App.Routes.Auth_Users.login_register import get_current_user
+from App.DataModels.Auth_Users.user_model import User
 from App.DataModels.Order.order_model import Order_Model,Order_Item_Model
 from App.DataModels.Cart.cart_model import Cart_Model,Cart_Item
 from App.DataModels.Menu.menu_model import Pizza_Model
@@ -12,6 +13,7 @@ from App.Utils.constant import OrderStatusEnum
 from typing import List
 from App.Utils.validator import validate_uuid
 from fastapi import Form
+from App.Schemas.Order.order_schemas import OrderHistorySchema
 #Create Order Router
 order_router=APIRouter()
 
@@ -179,13 +181,29 @@ def Cancel_Order(order_id:str,db:Session=Depends(get_db),user:User=Depends(get_c
     if not user_order:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Order Not Found")
     #4. Check Status
-    if user_order.status != "Pending" or  user_order.status != "Cancelled":
-        raise HTTPException(
+    if user_order.status.upper() == "PENDING":
+        #5.Updating Status
+        user_order.status="CANCELLED"
+        db.commit()
+        db.commit()
+        db.refresh(user_order)
+        return user_order
+    else:
+       raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, 
-            detail=f"Order cannot be cancelled. Current status is Delivered"
+            detail=f"Order cannot be cancelled because its current status is {user_order.status}"
         )
-    #5.Updating Status
-    user_order.status="Cancelled"
-    db.commit()
+#7)========================Track_Order_History/User===============================
+@order_router.get("/Get_Orders_History/User",status_code=status.HTTP_200_OK,response_model=OrderHistorySchema)
+def Get_Orders_History(db:Session=Depends(get_db),user:User=Depends(get_current_user)):
+    user_orders=db.query(User).options(joinedload(User.order_relationship).joinedload(Order_Model.order_item_relationship)).filter(
+        User.id==user.id
+    ).first()
+    #4.Raise Error if Order not found
+    if not user_orders:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Orders not found for this user in database !")
+        
+    return user_orders
+
+
     
-    return user_order

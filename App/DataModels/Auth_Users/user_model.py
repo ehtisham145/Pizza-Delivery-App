@@ -2,8 +2,8 @@ from App.Database.database import Base
 from sqlalchemy import Column, Integer, Text, String, Boolean, DateTime
 from datetime import datetime
 from sqlalchemy.orm import relationship
-# from App.DataModels.Cart.cart_model import Cart_Model
-# from App.DataModels.Order.order_model import Order_Model
+from App.DataModels.Cart.cart_model import Cart_Model
+from App.DataModels.Order.order_model import Order_Model
 
 class User(Base):
     """

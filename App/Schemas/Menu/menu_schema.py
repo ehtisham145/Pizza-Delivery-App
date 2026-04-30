@@ -1,7 +1,7 @@
-from pydantic import BaseModel,Field,HttpUrl
+from pydantic import BaseModel,Field
 from typing import Optional
 from datetime import datetime
-from App.Utils.constant import PizzaCategoryEnum, PizzaSizeEnum
+from App.Utils.constant import PizzaSizeEnum,PizzaCategoryEnum
 #=========================Category Validation===========================
 
 class Category_Request(BaseModel): 
@@ -28,7 +28,7 @@ class Pizza_Request(BaseModel):
     name:str=Field(...,min_length=5,max_length=50)
     description:str=Field(...,max_length=500)
     base_price:float=Field(...,gt=0)    
-    image_url:HttpUrl
+    image_url:str
     is_deleted:bool=False
     is_available:bool=True
     category_id:int

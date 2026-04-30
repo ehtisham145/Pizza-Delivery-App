@@ -10,7 +10,6 @@ class Order_Model(Base):
     __tablename__="orders"
     id=Column(UUID(as_uuid=True),primary_key=True,default=uuid.uuid4)
     user_id=Column(Integer,ForeignKey("users.id"),index=True) #Foreign  Key
-    # address_id=Column(Integer,ForeignKey("address.id"),index=True) #Foreign  Key
     status=Column(SQLEnum(OrderStatusEnum),nullable=False)
     total_price=Column(Integer,nullable=False)
     notes=Column(String,nullable=True)

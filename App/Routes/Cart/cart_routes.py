@@ -44,6 +44,8 @@ def Update_cart_Item_quantity(quantity: int, item_id: int, db: Session = Depends
 
     # 2. Update the attribute explicitly
     db_item.quantity = quantity
+    db_item.sub_total=db_item.unit_price*quantity
+
     
     # 3. Mark the object as "dirty" to ensure SQLAlchemy knows it changed
     db.add(db_item) 

@@ -1,4 +1,4 @@
-from fastapi import FastAPI,HTTPException,APIRouter,status,Depends,Form
+from fastapi import FastAPI,HTTPException,APIRouter,status,Depends,Body
 from App.Utils.middleware import get_current_user
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
@@ -146,7 +146,7 @@ def delete_pizza(pizza_id: int, db: Session = Depends(get_db), user: User = Depe
     return {"message": "Pizza successfully deactivated and hidden from the menu."}
 #==================Create Categories in Datavase (Admin)===========================
 @menu_router.post("/Create_Category",status_code=status.HTTP_201_CREATED,response_model=Category_Response)
-def Create_Category(name:PizzaCategoryEnum=Form(...),description: str = Form(None),db:Session=Depends(get_db),user:User=Depends(get_current_user)):
+def Create_Category(name:PizzaCategoryEnum= Body(...),description: str=Body(...),db:Session=Depends(get_db),user:User=Depends(get_current_user)):
     #1.Guard Check
     if user.role!="admin":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,detail="Only Admin can add the categories for pizza in DataBase !")

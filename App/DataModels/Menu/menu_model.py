@@ -14,7 +14,12 @@ class Category_Model(Base):
     
     id=Column(Integer,primary_key=True,index=True)
     
-    name=Column(SQLEnum(PizzaCategoryEnum),index=True,unique=True,nullable=False)
+    name = Column(
+        SQLEnum(PizzaCategoryEnum, values_callable=lambda obj: [item.value for item in obj]),
+        index=True, 
+        unique=True, 
+        nullable=False
+    )
     
     description=Column(String(500),nullable=True)
     
@@ -73,7 +78,12 @@ class Pizza_Model(Base):
 class Size_Model(Base):
     __tablename__="size"
     id=Column(Integer,primary_key=True,index=True)
-    size=Column(SQLEnum(PizzaSizeEnum),nullable=False)
+    
+    size=Column(SQLEnum(PizzaSizeEnum, values_callable=lambda obj: [item.value for item in obj]),
+        index=True, 
+        unique=True, 
+        nullable=False)
+
     price_multiplier = Column(Float, nullable=False, default=1.0)
 
     #Relationship
@@ -81,21 +91,6 @@ class Size_Model(Base):
     def __repr__(self): # Check whether data table is working correctly in Database
         return f"<Size(name={self.name}, size={self.size})>"
 
-# 2. How to use it in your logic
-
-# The goal of this table is to adjust the final price. In your backend logic, your calculation would look like this:
-
-#     Total Price = Pizza.base_price×Size.price_multiplier
-
-# Example Values:
-
-#     Small: 0.8 (Discounted)
-
-#     Medium: 1.0 (Base price)
-
-#     Large: 1.5 (50% extra)
-
-#     X-Large: 2.0 (Double price)
 
 #==========================Topping Table===========================
 

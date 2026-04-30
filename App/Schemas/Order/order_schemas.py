@@ -29,11 +29,11 @@ class OrderStatusUpdateSchema(BaseModel):
     model_config=ConfigDict(from_attributes=True)
 
 
-# 2. Place Order
-class PlaceOrderSchema(BaseModel):
-    address_id: int = Field(..., gt=0, description="Valid ID of your Address")
-    payment_method_id: int = Field(..., gt=0, description="Payment Method ID")
-    items: List[OrderItemSchema] = Field(..., min_length=1, description="List of pizzas ordered")
-    notes: Optional[str] = Field(None, max_length=500)
-
+class OrderHistorySchema(BaseModel):
+    id:int
+    full_name:str
+    email:str
+    order_relationship: List[OrderResponseSchema] = []
+    class Config:
+        from_attributes = True
 
