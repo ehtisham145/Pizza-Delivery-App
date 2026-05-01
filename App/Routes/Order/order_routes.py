@@ -143,7 +143,7 @@ def admin_get_order(order_id:str,db:Session=Depends(get_db),user:User=Depends(ge
 
 
 #5)=========================Update Order Status(Admin or Staff)================
-@order_router.put("/Update_Order_Status/Admin/{order_id}",status_code=status.HTTP_200_OK,response_model=OrderResponseSchema)
+@order_router.patch("/Update_Order_Status/Admin/{order_id}",status_code=status.HTTP_200_OK,response_model=OrderResponseSchema)
 def Update_Order_Status(order_id:str,new_status: OrderStatusEnum,db:Session=Depends(get_db),user:User=Depends(get_current_user)):
    #1.Check Whether the Order id is valid
     valid_order_id=validate_uuid(order_id) 
@@ -171,7 +171,7 @@ def Update_Order_Status(order_id:str,new_status: OrderStatusEnum,db:Session=Depe
     return db_order
     
 #6)=======================Cancel Order If pending===========================
-@order_router.put("/Cancel_Order/User/{order_id}",status_code=status.HTTP_200_OK,response_model=OrderResponseSchema)
+@order_router.patch("/Cancel_Order/User/{order_id}",status_code=status.HTTP_200_OK,response_model=OrderResponseSchema)
 def Cancel_Order(order_id:str,db:Session=Depends(get_db),user:User=Depends(get_current_user)):
     #1.Check UUID is valid
     valid_order_id=validate_uuid(order_id)

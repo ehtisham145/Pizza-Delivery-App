@@ -26,7 +26,7 @@ def get_cart(db: Session = Depends(get_db), user: User = Depends(get_current_use
     return cart_items
 
 #====================Update Cart Item Quantity (Customer)=================================
-@cart_router.put("/Update_cart_Item_quantity", status_code=status.HTTP_200_OK)
+@cart_router.patch("/Update_cart_Item_quantity", status_code=status.HTTP_200_OK)
 def Update_cart_Item_quantity(quantity: int, item_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     
     # 1. Get the user's cart

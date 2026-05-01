@@ -88,7 +88,7 @@ def Update_Pizza(pizza:Pizza_Request,pizza_id:int,db:Session=Depends(get_db),use
 
     return db_pizza
 #=====================Update Pizza Status (Admin or Staff)===================
-@menu_router.put("/Update_Pizza_Status/{pizza_id:int}",status_code=status.HTTP_200_OK)
+@menu_router.patch("/Update_Pizza_Status/{pizza_id:int}",status_code=status.HTTP_200_OK)
 def Update_Pizza_Status(pizza_data:Pizza_Request,pizza_id:int,db:Session=Depends(get_db),user:User=Depends(get_current_user)):
     #1.Guard Check
     allowed_roles = ["admin", "staff"]

@@ -30,3 +30,8 @@ class OrderStatusEnum(str, Enum):
     PENDING = "Pending"        
     DELIVERED = "Delivered"      
     CANCELLED = "Cancelled"   
+
+class AddressStatusEnum(str,Enum):
+    HOME="Home"
+    OFFICE="Office"
+    OTHER="Other"

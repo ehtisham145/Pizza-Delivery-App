@@ -13,7 +13,6 @@ class User(Base):
 
     # Primary key and indexing for faster lookups
     id = Column(Integer, primary_key=True, index=True)
-    
     # Unique identification fields
     full_name = Column(String(25), nullable=False)
     email = Column(String(80), unique=True, nullable=False)
@@ -38,6 +37,7 @@ class User(Base):
     #Relationship
     cart = relationship("Cart_Model", back_populates="owner", uselist=False, cascade="all, delete-orphan")
     order_relationship=relationship("Order_Model",back_populates="user_relationship")
+    address_relationship=relationship("Delivery_Model",back_populates="user_relationship")
     # ------------------ Object Representation ------------------------
     # The __repr__ method returns a string representation of the object.
     # It is used for debugging; instead of a memory address, 
