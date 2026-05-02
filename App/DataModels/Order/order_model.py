@@ -12,6 +12,7 @@ class Order_Model(Base):
     user_id=Column(Integer,ForeignKey("users.id"),index=True) #Foreign  Key
     status=Column(SQLEnum(OrderStatusEnum),nullable=False)
     total_price=Column(Integer,nullable=False)
+    address_id=Column(ForeignKey("delivery_addresses.id"))
     notes=Column(String,nullable=True)
     created_at=Column(DateTime,default=datetime.utcnow)
     updated_at=Column(DateTime,default=datetime.utcnow,onupdate=datetime.utcnow)
@@ -19,7 +20,9 @@ class Order_Model(Base):
     #Relationship
     user_relationship=relationship("User",back_populates="order_relationship")
     order_item_relationship=relationship("Order_Item_Model",back_populates="order_relationship")
-    
+    address_relationship=relationship("Delivery_Model",back_populates="order_relationship")
+    order_relationship=relationship("Payment_Model",back_populates="payment_relationship",uselist=False)
+
 #============================Order Item Table===============================
 class Order_Item_Model(Base):
     __tablename__="order_items"

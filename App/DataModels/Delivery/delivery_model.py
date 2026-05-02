@@ -20,3 +20,4 @@ class Delivery_Model(Base):
 
     #relationship
     user_relationship=relationship("User",back_populates="address_relationship")
+    order_relationship=relationship("Order_Model",back_populates="address_relationship")

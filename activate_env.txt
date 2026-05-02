@@ -28,86 +28,39 @@ pizzatopping ke names me Enum class ko add karo ja kar
 
 
 
-
-
-
-📦 Order Management — Full Deep Dive
 ________________________________________
-🗄️ Database Models
-
-Order Table
-
+💳 Payments — Full Deep Dive
+________________________________________
+🗄️ Database Model
 Column	Type	Notes
 id	UUID	
-user_id	FK → User	
-address_id	FK → Address	snapshot or FK
-status	Enum	see status flow below
-total_price	Float	locked at order time
-notes	String	special instructions, optional
+order_id	FK → Order	one-to-one
+method	Enum	cash_on_delivery, card
+status	Enum	pending, paid, failed, refunded
+amount	Float	copied from order total
+paid_at	DateTime	null until payment confirmed
 created_at	DateTime	
-updated_at	DateTime	
 
 
 
-OrderItem Table
-
-Column	Type	Notes
-id	Integer	
-order_id	FK → Order	
-pizza_id	FK → Pizza	
-pizza_name	String	snapshot — store name at order time
-size_name	String	snapshot
-quantity	Integer	
-unit_price	Float	snapshot
-subtotal	Float	
-
-
-
-
-OrderItemTopping Table
-
-Column	Type	Notes
-order_item_id	FK → OrderItem	
-topping_name	String	snapshot — store name not FK
-extra_price	Float	snapshot
 
 
 📡 API Endpoints
 Method	URL	Who	What
-POST	/api/v1/orders	Customer	Place order from cart   --done
-GET	/api/v1/orders/my-orders	Customer	My order history 
-GET	/api/v1/orders/my-orders/{id}	Customer	My single order detail  --done
-PATCH	/api/v1/orders/{id}/cancel	Customer	Cancel if still pending --done
-GET	/api/v1/orders	Staff/Admin	All orders list  --done
-GET	/api/v1/orders/{id}	Staff/Admin	Any order detail --done
-PATCH	/api/v1/orders/{id}/status	Staff/Admin	Update order status --done
-⚙️ Status Flow Rules — Very Important
-pending → confirmed → preparing → out_for_delivery → delivered
-                                                    ↑
-                          cancelled (only from pending)
-•	Staff can only move status forward — never backward
-•	Customer can only cancel when status is pending
-•	Once delivered, status is frozen — nobody can change it
-•	Every status change should trigger a notification to the customer
-________________________________________
+GET	/api/v1/payments/my-payments	Customer	My payment history
+GET	/api/v1/payments/{order_id}	Customer	Payment for a specific order
+PATCH	/api/v1/payments/{id}/status	Admin	Update payment status
+GET	/api/v1/payments	Admin	All payments list
 ⚙️ Business Logic Rules
-•	On POST /orders — copy everything from cart into OrderItems as snapshots
-•	Store pizza_name, size_name, topping_name as plain strings — not FKs — because menu can change later
-•	Cart must not be empty when placing order — return 400
-•	Address must belong to the logged-in user — validate this
-•	After order is created, clear the cart and create a Payment record simultaneously
-•	total_price on Order = sum of all OrderItem subtotals
+•	Payment record is auto-created when order is placed — customer never manually creates it
+•	For cash_on_delivery — status starts as pending, admin marks paid after delivery
+•	For card — in a real app this would call Stripe, but for your project just expose an endpoint for admin to manually mark it
+•	When order is cancelled — payment status should update to refunded if it was paid
+•	amount must match order.total_price exactly — validate this
+•	One order = one payment record, always — enforce unique constraint on order_id
 ________________________________________
 📦 Pydantic Schemas
-•	PlaceOrderSchema — address_id, payment_method, notes (optional)
-•	OrderStatusUpdateSchema — new_status (validated against allowed transitions)
-•	OrderItemResponseSchema — pizza_name, size, toppings, quantity, subtotal
-•	OrderResponseSchema — id, status, total, items, address, payment info, created_at
+•	PaymentResponseSchema — id, order_id, method, status, amount, paid_at
+•	PaymentStatusUpdateSchema — new_status (admin only)
 ________________________________________
-❌ Common Mistakes to Avoid
-•	Using FKs for pizza/topping names in OrderItem — always snapshot as strings
-•	Allowing status to go backward
-•	Not validating that the address belongs to the customer
-•	Not clearing the cart after order is placed
-•	Forgetting to create the payment record on order creation
 

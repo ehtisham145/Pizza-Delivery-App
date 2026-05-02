@@ -35,3 +35,13 @@ class AddressStatusEnum(str,Enum):
     HOME="Home"
     OFFICE="Office"
     OTHER="Other"
+
+class PaymentStatusEnum(str,Enum):
+    PENDING="Pending"
+    PAID="Paid"
+    FAILED="Failed"
+    REFUNDED="Refunded"
+
+class PaymentMethodEnum(str,Enum):
+    CARD="Card"
+    CASH_ON_DELIVERY="Cash on Delivery"

@@ -38,6 +38,7 @@ class User(Base):
     cart = relationship("Cart_Model", back_populates="owner", uselist=False, cascade="all, delete-orphan")
     order_relationship=relationship("Order_Model",back_populates="user_relationship")
     address_relationship=relationship("Delivery_Model",back_populates="user_relationship")
+    payment_relationship=relationship("Payment_Model",back_populates="user_relationship")
     # ------------------ Object Representation ------------------------
     # The __repr__ method returns a string representation of the object.
     # It is used for debugging; instead of a memory address, 

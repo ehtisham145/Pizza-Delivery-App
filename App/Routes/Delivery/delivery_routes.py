@@ -119,18 +119,23 @@ def delete_address(
     db:Session=Depends(get_db),
     user:User=Depends(get_current_user)
     ):
+    #1.Dont Delete Address if linked to an Order
+    exists_order=db.query(Order_Model).filter(Order_Model.address_id==address_id).first()
+
+    if exists_order:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="Cannot delete address. It is linked to an existing order !")
     
-    #1.Fetch User Address
+    #2.Fetch User Address
     db_user_address=db.query(Delivery_Model).filter(Delivery_Model.user_id==user.id,Delivery_Model.id==address_id).first()
     
-    #2.Raise Error
+    #3.Raise Error
     if not db_user_address:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Address Not Found !")
     
    
-    #3.Deleting Address
+    #4.Deleting Address
     db.delete(db_user_address)
     
-    #4.Saving Changes in Database
+    #5.Saving Changes in Database
     db.commit()
     return {"Message":"Address Deleted Successfully !"}

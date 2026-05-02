@@ -131,6 +131,8 @@ def drop_tables():
 
     try:
         db.execute(text("DROP TABLE IF EXISTS delivery_addresses"))
+        db.execute(text("DROP TABLE IF EXISTS order_items"))
+        db.execute(text("DROP TABLE IF EXISTS orders"))
 
         print("Tables Deleted Successfully")
     except Exception as e:
@@ -151,6 +153,6 @@ def check_tables():
 
 
 
-# if __name__ == "__main__":
-#     drop_tables()
+if __name__ == "__main__":
+    drop_tables()
     

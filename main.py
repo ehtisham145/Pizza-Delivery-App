@@ -9,7 +9,7 @@ from App.Routes.Delivery.delivery_routes import delivery_router
 from sqlalchemy.exc import SQLAlchemyError,IntegrityError
 from fastapi.responses import JSONResponse
 from App.Utils.exception_handler import add_exception_handlers
-
+from App.Routes.Payment.payment_routes import payment_router
 import uvicorn
 
 #=====================Creating App===================
@@ -30,6 +30,7 @@ app.include_router(menu_router,prefix="/menu",tags=["Menu Management"])
 app.include_router(cart_router,prefix="/cart",tags=["Cart"])
 app.include_router(order_router,prefix="/order",tags=["Order"])
 app.include_router(delivery_router,prefix="/delivery",tags=["Delivery"])
+app.include_router(payment_router,prefix="/payment",tags=["Payment"])
 
 #==================Running your Server======================
 if __name__ == "__main__":
