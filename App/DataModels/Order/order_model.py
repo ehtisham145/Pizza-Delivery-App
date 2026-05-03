@@ -1,14 +1,14 @@
 import uuid
-from sqlalchemy import UUID
 from sqlalchemy import Column,Integer,String,Boolean,ForeignKey,Enum as SQLEnum,DateTime,Float
 from App.Utils.constant import PizzaSizeEnum,PizzaToppingEnum,PizzaCategoryEnum,OrderStatusEnum
 from App.Database.database import Base
 from datetime import datetime
 from sqlalchemy.orm import relationship
+
 #============================Order Table===============================
 class Order_Model(Base):
     __tablename__="orders"
-    id=Column(UUID(as_uuid=True),primary_key=True,default=uuid.uuid4)
+    id=Column(String,primary_key=True,default=lambda: str(uuid.uuid4()))
     user_id=Column(Integer,ForeignKey("users.id"),index=True) #Foreign  Key
     status=Column(SQLEnum(OrderStatusEnum),nullable=False)
     total_price=Column(Integer,nullable=False)
@@ -21,13 +21,13 @@ class Order_Model(Base):
     user_relationship=relationship("User",back_populates="order_relationship")
     order_item_relationship=relationship("Order_Item_Model",back_populates="order_relationship")
     address_relationship=relationship("Delivery_Model",back_populates="order_relationship")
-    order_relationship=relationship("Payment_Model",back_populates="payment_relationship",uselist=False)
+    payment_relationship=relationship("Payment_Model",back_populates="order_relationship",uselist=False)
 
 #============================Order Item Table===============================
 class Order_Item_Model(Base):
     __tablename__="order_items"
     id=Column(Integer,primary_key=True)
-    order_id = Column(UUID(as_uuid=True), ForeignKey("orders.id"), index=True) #Foreign  Key
+    order_id = Column(String, ForeignKey("orders.id"), index=True) #Foreign  Key
     pizza_id=Column(Integer,ForeignKey("pizza.id"),index=True) #Foreign  Key
     pizza_name=Column(String,nullable=False)
     size_name=Column(SQLEnum(PizzaSizeEnum),nullable=False)

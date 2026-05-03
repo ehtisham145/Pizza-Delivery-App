@@ -5,7 +5,8 @@ from App.Utils.middleware import get_current_user
 from App.DataModels.Auth_Users.user_model import User
 from App.DataModels.Order.order_model import Order_Model
 from App.DataModels.Payment.payment_model import Payment_Model
-from App.Schemas.Payment.payment_schemas import PaymentResponseSchema,PaymentStatusUpdateSchema
+from App.Schemas.Payment.payment_schemas import PaymentResponseSchema,PaymentStatusUpdateSchema,PaymentCreateSchema
+from App.Utils.constant import PaymentStatusEnum
 from typing import List
 #Initialize Payment Router
 payment_router=APIRouter()
@@ -21,17 +22,81 @@ def get_payment_history(db:Session=Depends(get_db),user:User=Depends(get_current
     
     return all_payment_history
 
-#2.=======================Get Payment Details for Specific Order (order_id)===============================
+
+#2=========================Create your Payment============================================================
+@payment_router.post("/Create_Payment", status_code=status.HTTP_201_CREATED,response_model=PaymentResponseSchema)
+def create_payment(payment_data: PaymentCreateSchema, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+   
+    #1.Fetch db Order    
+    order = db.query(Order_Model).filter(
+        Order_Model.id == payment_data.order_id,
+        Order_Model.user_id == user.id
+    ).first()
+
+    #2.Raise Eror if not found
+    if not order:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Order not found"
+        )
+    
+    #3.Check If payment Already Exists
+    existing_payment = db.query(Payment_Model).filter(
+        Payment_Model.order_id == payment_data.order_id
+    ).first()
+
+   
+    #4.Raise Error If Existing Payment
+    if existing_payment:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Payment for this order already exists"
+        )
+    #5.Add Total price of order in amount
+    new_payment = Payment_Model(
+        order_id=payment_data.order_id,
+        user_id=user.id,
+        method=payment_data.method,
+        amount=order.total_price,  
+        status=PaymentStatusEnum.PENDING
+    )
+
+    db.add(new_payment)
+    db.commit()
+    db.refresh(new_payment)
+    return new_payment
+
+#3.=======================Get Payment Details for Specific Order (order_id)===============================
 @payment_router.get("/Get_Payment_detail/Customer/{order_id}",status_code=status.HTTP_200_OK,response_model=PaymentResponseSchema)
 def get_payment_detail(order_id:str,db:Session=Depends(get_db),user:User=Depends(get_current_user)):
     #1.Fetch Detail from db
-    payment_detail=db.query(Payment_Model).filter(Payment_Model.order_id==order_id,Payment_Model.user_id==user.id).first()
+    order = db.query(Order_Model).filter(
+        Order_Model.id == order_id,
+        Order_Model.user_id == user.id
+    ).first()
     #2.Raise Error If payment not found
+    if not order:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="This Order does not Exists in your Account")
+    
+    #3.Fetching Payment Detail
+    payment_detail = db.query(Payment_Model).filter(
+        Payment_Model.order_id == order_id,
+        Payment_Model.user_id == user.id
+    ).first()
+
+    #4.Raise Error If payment not found
     if not payment_detail:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Payment linked with this order id not found ")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Is order ki abhi tak koi payment nahi bani"  # ✅ Alag message
+        )
+
     return payment_detail
 
-#3.=============================Update payment status(Admin)===============================
+
+
+
+#4.=============================Update payment status(Admin)===============================
 @payment_router.patch("/Update_Payment_Status/Admin/{payment_id}",status_code=status.HTTP_200_OK,response_model=PaymentResponseSchema)
 def update_payment_status(payment_id:str,new_status:PaymentStatusUpdateSchema,db:Session=Depends(get_db),user:User=Depends(get_current_user)):
     #1.Checking the Role
@@ -48,7 +113,10 @@ def update_payment_status(payment_id:str,new_status:PaymentStatusUpdateSchema,db
     db.refresh(db_payment)
 
     return db_payment
-#4.=====================Get the List of all payments (Admin)============================
+
+
+
+#5.=====================Get the List of all payments (Admin)============================
 @payment_router.get("/Get_All_Payments/Admin",status_code=status.HTTP_200_OK,response_model=List[PaymentResponseSchema])
 def get_all_payments(db:Session=Depends(get_db),user:User=Depends(get_current_user)):
     #1.Checking The Login Person Role

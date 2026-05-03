@@ -1,4 +1,6 @@
 from enum import Enum
+from sqlalchemy.types import TypeDecorator, String
+import uuid
 class PizzaCategoryEnum(str, Enum):
     SIGNATURE = "Signature & Classics"
     MEAT_FEAST = "Meat Feast"
@@ -45,3 +47,5 @@ class PaymentStatusEnum(str,Enum):
 class PaymentMethodEnum(str,Enum):
     CARD="Card"
     CASH_ON_DELIVERY="Cash on Delivery"
+
+

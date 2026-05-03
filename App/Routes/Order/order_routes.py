@@ -81,11 +81,9 @@ def place_order_from_cart(db:Session=Depends(get_db),user:User=Depends(get_curre
 #2)============================Get Order By Order_ID==============================
 @order_router.get("/get_order_by_id/user/{order_id}",status_code=status.HTTP_200_OK,response_model=OrderResponseSchema)
 def get_order_by_id(order_id:str,db:Session=Depends(get_db),user:User=Depends(get_current_user)):
-    #1.Check whether the order id is valid
-    valid_order_id=validate_uuid(order_id)
     #2.Fetching user order
     user_order=db.query(Order_Model).options(joinedload(Order_Model.order_item_relationship).joinedload(Order_Item_Model.pizza_relationship)).filter(
-        Order_Model.id==valid_order_id,
+        Order_Model.id==order_id,
         Order_Model.user_id==user.id
     ).first()
     #Code in SQL 
@@ -95,7 +93,7 @@ def get_order_by_id(order_id:str,db:Session=Depends(get_db),user:User=Depends(ge
     #Raise Error If user Order dont exists
     if not user_order:
         print(user.id)
-        print(valid_order_id)
+        print(order_id)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Order not Found")
     return user_order
 
@@ -121,14 +119,12 @@ def Get_all_Orders_admin(db:Session=Depends(get_db),user:User=Depends(get_curren
 #4)===========================Get Order by ID (Admin or Staff)==============================
 @order_router.get("/admin/get_orders/{order_id}",status_code=status.HTTP_200_OK,response_model=OrderResponseSchema)
 def admin_get_order(order_id:str,db:Session=Depends(get_db),user:User=Depends(get_current_user)):
-    #1.Check whether the order id is valid
-    valid_order_id=validate_uuid(order_id)
     allowed_roles=["admin","staff"] 
     if user.role not in allowed_roles:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="Only Admin or Staff can Access All the Order Details !")
     #2.Fetching user order
     user_order=db.query(Order_Model).options(joinedload(Order_Model.order_item_relationship).joinedload(Order_Item_Model.pizza_relationship)).filter(
-        Order_Model.id==valid_order_id
+        Order_Model.id==order_id
     ).first()
     #Code in SQL 
     #SELECT orders,order_items,pizza FROM orders 
@@ -137,7 +133,7 @@ def admin_get_order(order_id:str,db:Session=Depends(get_db),user:User=Depends(ge
     #Raise Error If user Order dont exists
     if not user_order:
         print(user.id)
-        print(valid_order_id)
+        print(order_id)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Order not Found")
     return user_order
 
@@ -145,15 +141,13 @@ def admin_get_order(order_id:str,db:Session=Depends(get_db),user:User=Depends(ge
 #5)=========================Update Order Status(Admin or Staff)================
 @order_router.patch("/Update_Order_Status/Admin/{order_id}",status_code=status.HTTP_200_OK,response_model=OrderResponseSchema)
 def Update_Order_Status(order_id:str,new_status: OrderStatusEnum,db:Session=Depends(get_db),user:User=Depends(get_current_user)):
-   #1.Check Whether the Order id is valid
-    valid_order_id=validate_uuid(order_id) 
     #2.Check the Role
     allowed_roles=["admin","staff"]
     if user.role not in allowed_roles:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,detail="Only Admin or Staff can Access All the Order Details !")
     
     #3.Fetch Order from db
-    db_order=db.query(Order_Model).filter(Order_Model.id==valid_order_id).first()
+    db_order=db.query(Order_Model).filter(Order_Model.id==order_id).first()
 
     #4.Raise Error If order not found
     if not db_order:
@@ -173,10 +167,8 @@ def Update_Order_Status(order_id:str,new_status: OrderStatusEnum,db:Session=Depe
 #6)=======================Cancel Order If pending===========================
 @order_router.patch("/Cancel_Order/User/{order_id}",status_code=status.HTTP_200_OK,response_model=OrderResponseSchema)
 def Cancel_Order(order_id:str,db:Session=Depends(get_db),user:User=Depends(get_current_user)):
-    #1.Check UUID is valid
-    valid_order_id=validate_uuid(order_id)
     #2.Query for Order
-    user_order=db.query(Order_Model).filter(Order_Model.id==valid_order_id).first()
+    user_order=db.query(Order_Model).filter(Order_Model.id==order_id).first()
     #3.Raise Error
     if not user_order:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Order Not Found")
