@@ -22,7 +22,7 @@ class Order_Model(Base):
     order_item_relationship=relationship("Order_Item_Model",back_populates="order_relationship")
     address_relationship=relationship("Delivery_Model",back_populates="order_relationship")
     payment_relationship=relationship("Payment_Model",back_populates="order_relationship",uselist=False)
-
+    review_relationship=relationship("Review_Model",back_populates="order_relationship",uselist=False)
 #============================Order Item Table===============================
 class Order_Item_Model(Base):
     __tablename__="order_items"

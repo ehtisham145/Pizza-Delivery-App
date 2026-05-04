@@ -1,7 +1,7 @@
 from fastapi import Depends,HTTPException,APIRouter,status
 from sqlalchemy.orm import Session
 from App.Database.database import get_db
-from App.Utils.middleware import get_current_user
+from App.Utils.middleware import get_current_user,require_admin
 from App.DataModels.Auth_Users.user_model import User
 from App.DataModels.Order.order_model import Order_Model
 from App.DataModels.Payment.payment_model import Payment_Model
@@ -98,16 +98,13 @@ def get_payment_detail(order_id:str,db:Session=Depends(get_db),user:User=Depends
 
 #4.=============================Update payment status(Admin)===============================
 @payment_router.patch("/Update_Payment_Status/Admin/{payment_id}",status_code=status.HTTP_200_OK,response_model=PaymentResponseSchema)
-def update_payment_status(payment_id:str,new_status:PaymentStatusUpdateSchema,db:Session=Depends(get_db),user:User=Depends(get_current_user)):
-    #1.Checking the Role
-    if user.role!="admin":
-           raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,detail="Only Admin can update payment status")
-    #2.Fetching the payment from db
+def update_payment_status(payment_id:str,new_status:PaymentStatusUpdateSchema,db:Session=Depends(get_db),user:User=Depends(require_admin)):
+    #1.Fetching the payment from db
     db_payment=db.query(Payment_Model).filter(Payment_Model.id==payment_id).first()
-    #3.Raise Error if not found
+    #2.Raise Error if not found
     if not db_payment:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Payment linked with this id is not found !")
-    #4.Updating Status
+    #3.Updating Status
     db_payment.status=new_status.status.value
     db.commit()
     db.refresh(db_payment)
@@ -118,13 +115,10 @@ def update_payment_status(payment_id:str,new_status:PaymentStatusUpdateSchema,db
 
 #5.=====================Get the List of all payments (Admin)============================
 @payment_router.get("/Get_All_Payments/Admin",status_code=status.HTTP_200_OK,response_model=List[PaymentResponseSchema])
-def get_all_payments(db:Session=Depends(get_db),user:User=Depends(get_current_user)):
-    #1.Checking The Login Person Role
-    if user.role!="admin":
-          raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,detail="Only Admin can see the all Payments Detail")
-    #2.Fetching Data from Database
+def get_all_payments(db:Session=Depends(get_db),user:User=Depends(require_admin)):
+    #1.Fetching Data from Database
     all_payments=db.query(Payment_Model).all()
-    #If no detail is found
+    #2.If no detail is found
     if not all_payments:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="No Payment Found !")
     

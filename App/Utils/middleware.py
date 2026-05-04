@@ -150,4 +150,10 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         # Return the authenticated user object to be used by the endpoint
         return user
     
-
+def require_admin(user: User = Depends(get_current_user)):
+    if user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied. Admin privileges required."
+        )
+    return user

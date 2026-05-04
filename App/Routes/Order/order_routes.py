@@ -1,7 +1,7 @@
 from fastapi import APIRouter,HTTPException,Depends,status
 from App.Database.database import get_db
 from sqlalchemy.orm import Session,joinedload
-from App.Routes.Auth_Users.login_register import get_current_user
+from App.Utils.middleware import get_current_user,require_admin
 from App.DataModels.Auth_Users.user_model import User
 from App.DataModels.Order.order_model import Order_Model,Order_Item_Model
 from App.DataModels.Cart.cart_model import Cart_Model,Cart_Item
@@ -100,20 +100,16 @@ def get_order_by_id(order_id:str,db:Session=Depends(get_db),user:User=Depends(ge
 
 #3)=================================Get All Orders (Only Admin or Staff)==================================
 @order_router.get("/Get_all_Orders/Admin",status_code=status.HTTP_200_OK,response_model=List[OrderResponseSchema])
-def Get_all_Orders_admin(db:Session=Depends(get_db),user:User=Depends(get_current_user)):
-    #1.Check the Role
-    allowed_roles=["admin","staff"] 
-    if user.role not in allowed_roles:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="Only Admin or Staff can Access All the Order Details !")
-    #2.Fetch Orders From Order Table
+def Get_all_Orders_admin(db:Session=Depends(get_db),user:User=Depends(require_admin)):
+    #1.Fetch Orders From Order Table
     all_orders = db.query(Order_Model).options(
         joinedload(Order_Model.order_item_relationship).joinedload(Order_Item_Model.pizza_relationship)
     ).all()
-    #3.Raise Error if no record is found
+    #2.Raise Error if no record is found
     if not all_orders:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="No order is added in Database yet")
 
-    #4.Return all Order
+    #3.Return all Order
     return all_orders
 
 #4)===========================Get Order by ID (Admin or Staff)==============================

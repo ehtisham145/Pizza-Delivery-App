@@ -1,5 +1,5 @@
 from fastapi import FastAPI,HTTPException,APIRouter,status,Depends,Body
-from App.Utils.middleware import get_current_user
+from App.Utils.middleware import get_current_user,require_admin
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from typing import Optional
@@ -15,11 +15,8 @@ menu_router=APIRouter()
 
 #=====================Create Pizza (Admin)===================
 @menu_router.post("/Create_Pizza",status_code=status.HTTP_201_CREATED,response_model=Pizza_Response)
-def create_pizza(pizza:Pizza_Request,db:Session=Depends(get_db),user:User=Depends(get_current_user)):
-    #1.Guard Check
-    if user.role!="admin":
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,detail="Only Admin can add a new pizza in database !")
-    #Existing pizza
+def create_pizza(pizza:Pizza_Request,db:Session=Depends(get_db),user:User=Depends(require_admin)):
+    #1.Existing pizza
     existing_pizza = db.query(Pizza_Model).filter(Pizza_Model.name == pizza.name).first()
     
     if existing_pizza:
@@ -62,19 +59,15 @@ def Pizza_by_id(pizza_id:int,db:Session=Depends(get_db),user:User=Depends(get_cu
 
 #=====================Upate a Pizza (Admin)===================
 @menu_router.put("/Update_Pizza/{pizza_id}",status_code=status.HTTP_200_OK)
-def Update_Pizza(pizza:Pizza_Request,pizza_id:int,db:Session=Depends(get_db),user:User=Depends(get_current_user)):
-    #1.Guard Check
-    if user.role!="admin":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,detail="Only Admin can Update the Pizza Details !")
-    
-    #2.Searching Pizza in DataBase
+def Update_Pizza(pizza:Pizza_Request,pizza_id:int,db:Session=Depends(get_db),user:User=Depends(require_admin)):
+    #1.Searching Pizza in DataBase
     db_pizza=db.query(Pizza_Model).filter(Pizza_Model.id==pizza_id).first()
     
-    #3.Raise Error if pizza not found
+    #2.Raise Error if pizza not found
     if not db_pizza:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Pizza with this id is not found in Data Base !")
     
-    #4.Updating Pizza in Data Base
+    #3.Updating Pizza in Data Base
     db_pizza.name = pizza.name
     db_pizza.description = pizza.description
     db_pizza.base_price = pizza.base_price
@@ -144,19 +137,16 @@ def delete_pizza(pizza_id: int, db: Session = Depends(get_db), user: User = Depe
     db.refresh(pizza)
     
     return {"message": "Pizza successfully deactivated and hidden from the menu."}
+
 #==================Create Categories in Datavase (Admin)===========================
 @menu_router.post("/Create_Category",status_code=status.HTTP_201_CREATED,response_model=Category_Response)
-def Create_Category(name:PizzaCategoryEnum= Body(...),description: str=Body(...),db:Session=Depends(get_db),user:User=Depends(get_current_user)):
-    #1.Guard Check
-    if user.role!="admin":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,detail="Only Admin can add the categories for pizza in DataBase !")
-    
-    #2.Create Categories
+def Create_Category(name:PizzaCategoryEnum= Body(...),description: str=Body(...),db:Session=Depends(get_db),user:User=Depends(require_admin)):    
+    #1.Create Categories
     new_category=Category_Model(
             name=name,
             description=description
         )
-    #3.Adding Category in Database
+    #2.Adding Category in Database
     db.add(new_category)
     db.commit()
     db.refresh(new_category)
@@ -174,11 +164,8 @@ def View_Categories(db:Session=Depends(get_db),user:User=Depends(get_current_use
 
 #=============Create Toppings(only for Admin)==============================
 @menu_router.post("/Create_Toppings",status_code=status.HTTP_201_CREATED,response_model=Topping_Response)
-def create_topping(topping_data:Topping_Request,db:Session=Depends(get_db),user:User=Depends(get_current_user)):
-    # Guard 1: Check Role
-    if user.role!="admin":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,detail="Only Admin can create toppings !")
-    # Guard 2: Check Uniqueness
+def create_topping(topping_data:Topping_Request,db:Session=Depends(get_db),user:User=Depends(require_admin)):
+    # 1.Check Uniqueness
     existing_topping=db.query(ToppingModel).filter(topping_data.name==ToppingModel.name).first()
     if existing_topping:
         raise HTTPException(
@@ -209,24 +196,21 @@ def get_all_toppings(db:Session=Depends(get_db),user:User=Depends(get_current_us
 
 #=============Update Topping Only Admin==============================
 @menu_router.put("/Update_Topping/{topping_id}")
-def Update_Topping(topping_data:Topping_Request,topping_id:int,db:Session=Depends(get_db),user:User=Depends(get_current_user)):
-    #1.Guard Check for Admin
-    if user.role!="admin":
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="Only Admin can Update Topping Details in Data Base !")
-    #2.Search Topping Id
+def Update_Topping(topping_data:Topping_Request,topping_id:int,db:Session=Depends(get_db),user:User=Depends(require_admin)):
+    #1.Search Topping Id
     db_topping=db.query(ToppingModel).filter(ToppingModel.id==topping_id).first()
-    #3.Raise Error if id not found
+    #2.Raise Error if id not found
     if not db_topping:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="No Topping is found with this id in data base !")
-    #4.Update Topping
+    #3.Update Topping
     db_topping.name=topping_data.name
     db_topping.extra_price=topping_data.extra_price
     db_topping.is_available=topping_data.is_available
-    #5.Adding in Data base
+    #4.Adding in Data base
     db.add(db_topping)
     db.commit()
     db.refresh(db_topping)
 
-    #6.Return Topping
+    #5.Return Topping
     return db_topping
 

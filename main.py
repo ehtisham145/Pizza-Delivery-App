@@ -6,10 +6,12 @@ from App.Routes.Menu.menu_routes import menu_router
 from App.Routes.Cart.cart_routes import cart_router
 from App.Routes.Order.order_routes import order_router
 from App.Routes.Delivery.delivery_routes import delivery_router
+from App.Routes.Payment.payment_routes import payment_router
+from App.Routes.Reviews.reviews_routes import review_router
+
 from sqlalchemy.exc import SQLAlchemyError,IntegrityError
 from fastapi.responses import JSONResponse
 from App.Utils.exception_handler import add_exception_handlers
-from App.Routes.Payment.payment_routes import payment_router
 import uvicorn
 
 #=====================Creating App===================
@@ -31,6 +33,8 @@ app.include_router(cart_router,prefix="/cart",tags=["Cart"])
 app.include_router(order_router,prefix="/order",tags=["Order"])
 app.include_router(delivery_router,prefix="/delivery",tags=["Delivery"])
 app.include_router(payment_router,prefix="/payment",tags=["Payment"])
+app.include_router(review_router,prefix="/review",tags=["Reviews"])
+
 
 #==================Running your Server======================
 if __name__ == "__main__":

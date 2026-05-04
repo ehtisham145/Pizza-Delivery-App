@@ -130,9 +130,7 @@ def drop_tables():
     db=next(db_gen)
 
     try:
-        db.execute(text("DROP TABLE IF EXISTS delivery_addresses"))
-        db.execute(text("DROP TABLE IF EXISTS order_items"))
-        db.execute(text("DROP TABLE IF EXISTS orders"))
+        db.execute(text("DROP TABLE IF EXISTS reviews"))
 
         print("Tables Deleted Successfully")
     except Exception as e:

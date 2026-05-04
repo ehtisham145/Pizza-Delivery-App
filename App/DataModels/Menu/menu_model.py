@@ -69,6 +69,7 @@ class Pizza_Model(Base):
 
     piz=relationship("Cart_Item",back_populates="piza")
     order_relationship=relationship("Order_Item_Model",back_populates="pizza_relationship")
+    review_relationship=relationship("Review_Model",back_populates="pizza_relationship")
     def __repr__(self): # Check whether data table is working correctly in Database
         return f"<Pizza(name={self.name}, size={self.description})>"
 
