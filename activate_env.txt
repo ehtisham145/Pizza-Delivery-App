@@ -23,44 +23,33 @@ JSON
 
 
 
+Step 1 — Model banao
+models.py mein Notification table banao jisme id, user_id, title, message, is_read, created_at ho.
 
-⭐ Reviews & Ratings — Full Deep Dive
-________________________________________
-🗄️ Database Model
-Column	Type	Notes
-id	Integer	
-order_id	FK → Order	unique — one review per order
-user_id	FK → User	
-rating	Integer	1 to 5 only
-comment	String	optional
-created_at	DateTime	
+Step 2 — Pydantic Schemas banao
+schemas.py mein sirf 3 schemas chahiye:
+
+NotificationOut — response ke liye
+NotificationListOut — pagination ke liye
+UnreadCountOut — badge count ke liye
 
 
-📡 API Endpoints
-Method	URL	Who	What
-POST	/api/v1/reviews	Customer	Submit a review
-GET	/api/v1/reviews/my-reviews	Customer	My review history
-GET	/api/v1/reviews	Admin	All reviews
-DELETE	/api/v1/reviews/{id}	Admin	Delete abusive review
-GET	/api/v1/menu/pizzas/{id}/reviews	Public	Reviews for a pizza
+Step 3 — Helper Function banao
+services.py ya utils.py mein ek function banao:
+create_notification(db, user_id, title, message)
+Yeh function tab call karo jab order status change ho.
+
+Step 4 — Order Service mein call karo
+Jab bhi order ka status update ho — confirmed, preparing, out_for_delivery, delivered, cancelled — wahan create_notification() ko call karo aur message pass karo.
+
+Step 5 — Router banao
+routers/notifications.py mein 4 endpoints banao:
+
+GET /notifications — list with pagination
+PATCH /notifications/{id}/read — ek mark as read
+PATCH /notifications/read-all — sab mark as read
+GET /notifications/unread-count — badge ke liye count
 
 
-⚙️ Business Logic Rules
-•	Review is only allowed when order.status == delivered — check this before allowing submission
-•	One review per order — enforce with unique constraint on order_id column
-•	Validate that the order being reviewed belongs to the logged-in customer
-•	Rating must be between 1 and 5 — validate in Pydantic with ge=1, le=5
-•	Customers cannot edit or delete their own review after submission — keeps it honest
-•	Only admin can delete reviews
-•	When fetching pizza details, optionally include average rating calculated from all its order reviews
-
-
-________________________________________
-📦 Pydantic Schemas
-•	ReviewCreateSchema — order_id, rating, comment
-•	ReviewResponseSchema — rating, comment, created_at, user full_name (not email)
-
-
-
-
-
+Step 6 — Authentication lagao
+Har endpoint par get_current_user dependency lagao taake sirf logged-in user apni notifications dekh sake.
