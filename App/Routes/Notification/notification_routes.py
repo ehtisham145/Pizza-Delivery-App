@@ -47,7 +47,7 @@ def mark_all_notification_as_read(db:Session=Depends(get_db),user:User=Depends(g
     return db_notifications
 
 #4.=====================GET /notifications/unread-count====================
-@notification_router.get("/unread/notifications/count",status_code=status.HTTP_200_OK,repsonse_model=UnreadCountOut)
+@notification_router.get("/unread/notifications/count",status_code=status.HTTP_200_OK,response_model=UnreadCountOut)
 def notification_count(db:Session=Depends(get_db),user:User=Depends(get_current_user)):
     #1.Fetching Notification from db
     count=db.query(Notification_Model).filter(Notification_Model.user_id==user.id,Notification_Model.is_read==False).count()

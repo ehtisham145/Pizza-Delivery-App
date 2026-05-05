@@ -8,6 +8,7 @@ from App.Routes.Order.order_routes import order_router
 from App.Routes.Delivery.delivery_routes import delivery_router
 from App.Routes.Payment.payment_routes import payment_router
 from App.Routes.Reviews.reviews_routes import review_router
+from App.Routes.Notification.notification_routes import notification_router
 
 from sqlalchemy.exc import SQLAlchemyError,IntegrityError
 from fastapi.responses import JSONResponse
@@ -34,6 +35,7 @@ app.include_router(order_router,prefix="/order",tags=["Order"])
 app.include_router(delivery_router,prefix="/delivery",tags=["Delivery"])
 app.include_router(payment_router,prefix="/payment",tags=["Payment"])
 app.include_router(review_router,prefix="/review",tags=["Reviews"])
+app.include_router(notification_router,prefix="/notifications",tags=["Notifications"])
 
 
 #==================Running your Server======================
