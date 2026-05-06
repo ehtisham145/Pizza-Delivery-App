@@ -7,8 +7,8 @@ class UserLoginSchema(BaseModel):
     Schema for capturing login credentials.
     No complexity validation is performed here.
     """
-    email: EmailStr
-    password: str = Field(..., min_length=1) # Just ensure it is not empty
+    email: EmailStr=Field(...,description="Email of User")
+    password: str = Field(..., min_length=1,description="Password of User") # Just ensure it is not empty
 
 # ----------------- Login Response -----------------
 class UserLoginResponseSchema(BaseModel):
@@ -17,10 +17,10 @@ class UserLoginResponseSchema(BaseModel):
     NEVER return the password (even hashed) in the response.
     """
     refresh_token:RefreshTokenRequest
-    access_token: str
+    access_token: str=Field(...,description="Access Token of User")
     token_type: str = "bearer"
-    email: EmailStr
-    full_name:str
+    email: EmailStr=Field(...,description="Email of User")
+    full_name:str=Field(...,description="Name of User")
 
     model_config={
         "form_attributes":True

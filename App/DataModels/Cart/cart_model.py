@@ -2,20 +2,20 @@ from sqlalchemy.orm import Session
 from App.Database.database import Base
 from sqlalchemy import Column,Integer,String,Float,Boolean,DateTime,ForeignKey,Numeric
 from sqlalchemy.orm import relationship
-import datetime
-from App.DataModels.Menu.menu_model import Pizza_Model,Size_Model
+from datetime import datetime,timezone
 
 #========================Cart Table========================
 class Cart_Model(Base):
     __tablename__="cart"
-    id=Column(Integer,primary_key=True,index=True)
-    user_id=Column(Integer,ForeignKey("users.id"),unique=True,index=True,nullable=False)
-    # created_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
-    # updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow, nullable=False)
+    id  = Column(Integer,primary_key=True,index=True)
+    user_id =    Column(Integer,ForeignKey("users.id"),unique=True,index=True,nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc),
+                    onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
     #Relationship
-    items=relationship("Cart_Item",back_populates="cart",cascade="all, delete-orphan")
-    owner=relationship("User",back_populates="cart")
+    items =  relationship("Cart_Item",back_populates="cart",cascade="all, delete-orphan",lazy="select")
+    owner = relationship("User",back_populates="cart")
 
     #Handling Prices and Other Features
     @property
@@ -26,24 +26,27 @@ class Cart_Model(Base):
     def item_count(self):
         return len(self.items) if self.items else 0
 
+    def __repr__(self):
+        return f"<Cart user_id={self.user_id} items={self.item_count}>"
+
 #=========================Cart Items===========================
 class Cart_Item(Base):
     __tablename__="cart_items"
 
-    id=Column(Integer,primary_key=True,index=True)
-    cart_id=Column(Integer,ForeignKey("cart.id"),index=True,nullable=False)
-    pizza_id=Column(Integer,ForeignKey("pizza.id"),index=True,nullable=False)
-    size_id=Column(Integer,ForeignKey("size.id"),index=True,nullable=False)
-    size=Column(String,nullable=False)
-    quantity=Column(Integer,default=1,nullable=False)
-    unit_price=Column(Float,nullable=False)
-    sub_total=Column(Integer,nullable=False)
+    id = Column(Integer,primary_key=True,index=True)
+    cart_id =    Column(Integer,ForeignKey("cart.id"),index=True,nullable=False)
+    pizza_id =   Column(Integer,ForeignKey("pizza.id"),index=True,nullable=False)
+    size_id =    Column(Integer,ForeignKey("size.id"),index=True,nullable=False)
+    size =   Column(String,nullable=False)
+    quantity =   Column(Integer,default=1,nullable=False)
+    unit_price = Column(Numeric(10, 2), nullable=False)
+    sub_total  = Column(Numeric(10, 2), nullable=False)
 
     #Relationship
-    cart = relationship("Cart_Model", back_populates="items")
-    piza = relationship("Pizza_Model",back_populates="piz") 
-    size_relationship = relationship("Size_Model",back_populates="siz") 
-    toppings = relationship("Cart_Item_Topping", back_populates="cart_item")
+    cart = relationship("Cart_Model",   back_populates="items")
+    pizza = relationship("Pizza_Model", back_populates="cart_items") 
+    size= relationship("Size_Model",    back_populates="cart_items") 
+    topping = relationship("Cart_Item_Topping", back_populates="cart_item" , cascade="all, delete-orphan")
 
 
 #========================Cart Item Topping Table==================

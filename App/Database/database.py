@@ -32,5 +32,3 @@ def get_db():
         yield db  
     finally:
         db.close()
-
-print(get_db())

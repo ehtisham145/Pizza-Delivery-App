@@ -53,3 +53,35 @@ GET /notifications/unread-count — badge ke liye count
 
 Step 6 — Authentication lagao
 Har endpoint par get_current_user dependency lagao taake sirf logged-in user apni notifications dekh sake.
+
+
+🛠️ Admin Dashboard — Full Deep Dive
+________________________________________
+📡 API Endpoints
+Method	URL	Who	What
+GET	/api/v1/admin/stats	Admin	Dashboard summary
+GET	/api/v1/admin/users	Admin	List all users
+PATCH	/api/v1/admin/users/{id}/deactivate	Admin	Deactivate a user
+PATCH	/api/v1/admin/users/{id}/activate	Admin	Reactivate a user
+PATCH	/api/v1/admin/users/{id}/role	Admin	Change user role
+GET	/api/v1/admin/orders	Admin	All orders with filters
+⚙️ The Stats Endpoint — What to Return
+GET /api/v1/admin/stats
+
+Response:
+{
+  "total_orders_today": 24,
+  "revenue_today": 18450.00,
+  "pending_orders": 5,
+  "total_users": 312,
+  "total_orders_all_time": 1894,
+  "total_revenue_all_time": 945000.00
+}
+This is a single endpoint but does multiple DB aggregation queries behind the scenes using SQLAlchemy's func.count() and func.sum().
+________________________________________
+⚙️ Business Logic Rules
+•	Admin cannot deactivate another admin — protect against this
+•	Admin cannot change their own role — prevents accidental self-lockout
+•	The orders list for admin should support filtering by status — ?status=pending
+•	Deactivating a user should not cancel their active orders — handle separately
+•	Keep all admin routes under /api/v1/admin/ prefix and protect with require_admin dependency

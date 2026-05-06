@@ -1,106 +1,105 @@
-from pydantic import BaseModel,Field
-from typing import Optional
 from datetime import datetime
-from App.Utils.constant import PizzaSizeEnum,PizzaCategoryEnum
-#=========================Category Validation===========================
-
-class Category_Request(BaseModel): 
-    name: PizzaCategoryEnum
-    description: str
-    
-    model_config = {
-        "from_attributes": True
-    }
-
-class Category_Response(BaseModel): # Inheritance ki bajaye seedha BaseModel use karein
-    id: int
-    name: PizzaCategoryEnum
-    description: str
-    created_at: datetime
-    
-    model_config = {
-        "from_attributes": True
-    }
-#========================== Pizza Validation===========================
+from decimal import Decimal
+from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict, HttpUrl
+from App.Utils.constant import PizzaSizeEnum, PizzaCategoryEnum
 
 
+# ======================== Category Schemas ========================
+class Category_Request(BaseModel):
+    """Schema for creating or updating a category."""
+
+    name:        PizzaCategoryEnum   = Field(..., description="Category type")
+    description: Optional[str]       = Field(None, max_length=500, description="Category description")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class Category_Response(BaseModel):
+    """Schema returned when fetching a category."""
+
+    id:          int              = Field(..., description="Category ID")
+    name:        PizzaCategoryEnum = Field(..., description="Category type")
+    description: Optional[str]    = Field(None, description="Category description")
+    created_at:  datetime
+    updated_at:  Optional[datetime] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ======================== Pizza Schemas ========================
 class Pizza_Request(BaseModel):
-    name:str=Field(...,min_length=5,max_length=50)
-    description:str=Field(...,max_length=500)
-    base_price:float=Field(...,gt=0)    
-    image_url:str
-    is_deleted:bool=False
-    is_available:bool=True
-    category_id:int
+    """Schema for creating or updating a pizza."""
 
-    model_config={
-        "from_attributes": True
-    }
+    name:        str     = Field(..., min_length=5, max_length=50,  description="Pizza name")
+    description: str     = Field(..., max_length=500,               description="Pizza description")
+    base_price:  Decimal = Field(..., gt=0, decimal_places=2,       description="Base price before size multiplier")
+    image_url:   HttpUrl = Field(...,                               description="URL of pizza image")
+    is_available: bool   = Field(True,                              description="Whether pizza is orderable")
+    category_id: int     = Field(...,                               description="ID of the pizza category")
+
+    model_config = ConfigDict(from_attributes=True)
+
 
 class Pizza_Response(BaseModel):
-    id: int
-    name:str
-    base_price:int
-    is_available:bool
-    created_at: datetime
-    updated_at: datetime
-    
-    model_config={
-        "from_attributes": True
-    }
-#==========================Size Table===========================
+    """Schema returned when fetching a pizza."""
 
+    id:           int     = Field(..., description="Pizza ID")
+    name:         str     = Field(..., description="Pizza name")
+    description:  str     = Field(..., description="Pizza description")
+    base_price:   Decimal = Field(..., description="Base price")
+    image_url:    str     = Field(..., description="Pizza image URL")
+    is_available: bool    = Field(..., description="Whether pizza is orderable")
+    category_id:  int     = Field(..., description="Category ID")
+    created_at:   datetime
+    updated_at:   Optional[datetime] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ======================== Size Schemas ========================
 class Size_Request(BaseModel):
-    size:PizzaSizeEnum
-    # price_multiplier must be a positive number
-    # gt=0 ensures they can't set a 0 or negative price
-    price_multiplier:float=Field(default=1.0,gt=0)
+    """Schema for creating or updating a size."""
 
-    model_config={
-        "from_attributes": True
-    }
+    size:             PizzaSizeEnum = Field(..., description="Pizza size")
+    price_multiplier: Decimal       = Field(default=Decimal("1.0"), gt=0,
+                                            decimal_places=2,
+                                            description="Price multiplier applied to base price")
 
-class Size_Response(Size_Request):
-    id:int
-    size:PizzaSizeEnum
-    created_at:datetime
-    updated_at:datetime
-    
-    model_config={
-        "from_attributes": True
-    }
-# 2. How to use it in your logic
+    model_config = ConfigDict(from_attributes=True)
 
-# The goal of this table is to adjust the final price. In your backend logic, your calculation would look like this:
 
-#     Total Price = Pizza.base_price×Size.price_multiplier
+class Size_Response(BaseModel):
+    """Schema returned when fetching a size."""
 
-# Example Values:
+    id:               int           = Field(..., description="Size ID")
+    size:             PizzaSizeEnum = Field(..., description="Pizza size")
+    price_multiplier: Decimal       = Field(..., description="Price multiplier")
+    created_at:       datetime
+    updated_at:       Optional[datetime] = None
 
-#     Small: 0.8 (Discounted)
+    model_config = ConfigDict(from_attributes=True)
 
-#     Medium: 1.0 (Base price)
 
-#     Large: 1.5 (50% extra)
+# ======================== Topping Schemas ========================
+class Topping_Request(BaseModel):
+    """Schema for creating or updating a topping."""
 
-#     X-Large: 2.0 (Double price)
+    name:         str     = Field(..., min_length=2, max_length=100, description="Topping name")
+    extra_price:  Decimal = Field(..., gt=0, decimal_places=2,       description="Extra charge for this topping")
+    is_available: bool    = Field(True,                              description="Whether topping is currently available")
 
-#==========================Topping Table===========================
+    model_config = ConfigDict(from_attributes=True)
 
-class Topping_Request(BaseModel):    
-    name:str=Field(...,min_length=5,max_length=100)
-    extra_price:float=Field(gt=0)
-    is_available:bool=True
-
-    model_config={
-        "from_attributes": True
-    }
 
 class Topping_Response(BaseModel):
-    name:str
-    extra_price:float
-    is_available:bool
+    """Schema returned when fetching a topping."""
 
-    model_config={
-        "from_attributes": True
-    }
+    id:           int     = Field(..., description="Topping ID")
+    name:         str     = Field(..., description="Topping name")
+    extra_price:  Decimal = Field(..., description="Extra charge")
+    is_available: bool    = Field(..., description="Availability status")
+    created_at:   datetime
+    updated_at:   Optional[datetime] = None
+
+    model_config = ConfigDict(from_attributes=True)

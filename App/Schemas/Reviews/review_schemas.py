@@ -1,24 +1,25 @@
 from pydantic import BaseModel,Field
-from datetime import datetime
+from datetime import datetime,timezone
+from typing import Optional
 #1.======================Review Create Schema============================
 class ReviewCreateSchema(BaseModel):
-    order_id:str=Field(...,description="Id of your Order")
-    rating:float=Field(...,ge=0, le=5,description="Reviews and Rating")
-    comment:str=Field(...,description="Enter your Comment ")
-
+    order_id: str   = Field(..., description="ID of the order being reviewed")
+    pizza_id: int   = Field(..., description="ID of the pizza being reviewed")
+    rating:   float = Field(..., ge=1, le=5, description="Rating from 1 to 5")
+    omment:  Optional[str] = Field(None, max_length=1000, description="Optional comment")
     model_config={
         "from_attributes":True
     }
 
 #2.======================Review Response Schema============================
 class ReviewResponseSchema(BaseModel):
-    rating:float=Field(...,description="Reviews and Rating")
-    comment:str=Field(...,ge=0, le=5,description="Enter your Comment ")
-    created_at:datetime
-    full_name:str=Field(...,description="user name")
+    id:         int   = Field(..., description="Review ID")
+    order_id:   str   = Field(..., description="Associated order ID")
+    rating:     float = Field(..., ge=1, le=5, description="Rating from 1 to 5")
+    comment:    Optional[str] = Field(None, description="Reviewer's comment")
+    full_name:  str   = Field(..., description="Name of the reviewer")
+    created_at: datetime
+    updated_at: Optional[datetime] = None
 
-    model_config={
-        "from_attributes":True
-    }
+    model_config = ConfigDict(from_attributes=True)
 
-ReviewResponseSchema.model_rebuild()

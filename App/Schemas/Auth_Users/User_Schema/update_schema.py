@@ -10,8 +10,8 @@ class UserUpdateSchema(BaseModel):
     Schema for capturing Updating credentials.
     No complexity validation is performed here.
     """
-    full_name: str = Field(..., min_length=5, max_length=20)
-    phone_number:PhoneStr
+    full_name: str = Field(..., min_length=5, max_length=20,description="Name of User")
+    phone_number:PhoneStr=Field(...,description="Phone Number of User")
     model_config={
         "form_attributes":True
     }

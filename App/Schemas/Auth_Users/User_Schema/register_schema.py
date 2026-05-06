@@ -18,11 +18,11 @@ class UserRegisterSchema(BaseModel):
     Final Registration Schema inheriting Phone and Password logic.
     Follows DRY (Don't Repeat Yourself) principle.
     """
-    full_name: str = Field(..., min_length=5, max_length=20)
-    email: EmailStr
-    phone_number:PhoneStr
-    password:PasswordStr
-    role:str
+    full_name: str = Field(..., min_length=5, max_length=20,description="Name of User")
+    email: EmailStr = Field(...,description="Email of user")
+    phone_number:PhoneStr=Field(...,description="Phone Number of User")
+    password:PasswordStr=Field(...,description="Password of User")
+    role:str=Field(...,description="Role of User")
 
     class ConfigDict:
         from_attributes = True
@@ -31,11 +31,11 @@ class UserRegisterSchema(BaseModel):
 
 
 class UserResponseSchema(BaseModel):
-    id: int  # Added ID
-    full_name: str = Field(..., min_length=5, max_length=25)
+    id: int = Field(...,description="ID of User")
+    full_name: str = Field(...,description="Email of user")
     email: EmailStr
-    phone_number: str  
-    role: str
+    phone_number:PhoneStr=Field(...,description="Phone Number of User")  
+    role:str=Field(...,description="Role of User")
     is_active: bool
     
     class ConfigDict:

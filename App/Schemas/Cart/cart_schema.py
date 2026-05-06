@@ -1,46 +1,88 @@
-from pydantic import BaseModel, Field
+from decimal import Decimal
 from typing import List, Optional
-from datetime import datetime
-from App.Schemas.Menu.menu_schema import Pizza_Request
+from pydantic import BaseModel, Field, ConfigDict
 
-# 1. Add to Cart (User input ke liye)
-class AddToCartSchema(BaseModel):
-    pizza_id: int = Field(..., gt=0, description="Pizza ki ID honi chahiye")
-    size_id: int = Field(..., gt=0)
-    quantity: int = Field(default=1, gt=0, le=10) # Max 10 pizzas
-    topping_ids: Optional[List[int]] = Field(default_factory=list)
 
-# 2. Update Cart Item (Sirf quantity badalne ke liye)
-class UpdateCartItemSchema(BaseModel):
-    quantity: int = Field(..., gt=0, le=20)
-
-# --- Response Schemas (Data wapas dikhane ke liye) ---
-
-# Topping ka chota sa info schema
+# ======================== Supporting Info Schemas ========================
 class ToppingInfo(BaseModel):
-    id: int
-    name: str
+    """Lightweight topping info for cart display."""
 
-    class Config:
-        from_attributes = True
+    id:          int     = Field(..., description="Topping ID")
+    name:        str     = Field(..., description="Topping name")
+    extra_price: Decimal = Field(..., description="Extra charge for this topping")
 
-# 3. Cart Item Response
+    model_config = ConfigDict(from_attributes=True)
+
+
+class SizeInfo(BaseModel):
+    """Lightweight size info for cart display."""
+
+    id:               int     = Field(..., description="Size ID")
+    size:             str     = Field(..., description="Size name (e.g. Small, Medium, Large)")
+    price_multiplier: Decimal = Field(..., description="Price multiplier for this size")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ======================== Add to Cart Schema ========================
+class AddToCartSchema(BaseModel):
+    """Schema for adding a pizza to the cart."""
+
+    pizza_id:    int       = Field(..., gt=0,         description="ID of the pizza to add")
+    size_id:     int       = Field(..., gt=0,         description="ID of the selected size")
+    quantity:    int       = Field(1,  gt=0, le=10,   description="Quantity (max 10 per item)")
+    topping_ids: List[int] = Field(default=[],        description="Optional list of topping IDs")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ======================== Update Cart Item Schema ========================
+class UpdateCartItemSchema(BaseModel):
+    """Schema for updating the quantity of a cart item."""
+
+    quantity: int = Field(..., gt=0, le=20, description="Updated quantity (max 20)")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ======================== Cart Item Response Schema ========================
 class CartItemResponseSchema(BaseModel):
-    id: int
-    size: str
-    quantity: int
-    unit_price: float
-    sub_total: float
-    piza:Pizza_Request
+    """Schema for a single item in the cart response."""
 
-    class Config:
-        from_attributes = True
+    id:         int          = Field(..., description="Cart item ID")
+    pizza_id:   int          = Field(..., description="ID of the pizza")
+    quantity:   int          = Field(..., description="Quantity in cart")
+    unit_price: Decimal      = Field(..., description="Price per unit")
+    sub_total:  Decimal      = Field(..., description="Line total (unit_price × quantity)")
+    size:       SizeInfo
+    pizza:      "PizzaInfo"
+    toppings:   List[ToppingInfo] = []
 
-# 4. Full Cart Response
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ======================== Full Cart Response Schema ========================
 class CartResponseSchema(BaseModel):
-    items: List[CartItemResponseSchema]
-    total_price: float
-    item_count: int
+    """Schema for the full cart response."""
 
-    class Config:
-        from_attributes = True
+    id:          int                      = Field(..., description="Cart ID")
+    items:       List[CartItemResponseSchema] = []
+    total_price: Decimal                  = Field(..., description="Total price of all items")
+    item_count:  int                      = Field(..., ge=0, description="Total number of items")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ======================== Lightweight Pizza Info for Cart ========================
+class PizzaInfo(BaseModel):
+    """Lightweight pizza info embedded in cart item responses."""
+
+    id:          int     = Field(..., description="Pizza ID")
+    name:        str     = Field(..., description="Pizza name")
+    base_price:  Decimal = Field(..., description="Base price of the pizza")
+    image_url:   str     = Field(..., description="Pizza image URL")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+CartItemResponseSchema.model_rebuild()  # Resolves the forward reference to PizzaInfo

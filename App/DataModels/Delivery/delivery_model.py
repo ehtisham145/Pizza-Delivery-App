@@ -1,23 +1,24 @@
-from App.Database.database import Base,get_db
 from sqlalchemy import Column,Integer,String,Boolean,ForeignKey,Enum as SQLEnum,Float,DateTime
 from App.Utils.constant import AddressStatusEnum
-from fastapi import Depends
-from sqlalchemy.orm import Session,relationship
-from enum import Enum
-from datetime import datetime
+from datetime import datetime,timezone
 
 #=================================Delivery Address=============================
 class Delivery_Model(Base):
     __tablename__="delivery_addresses"
-    id=Column(Integer,primary_key=True,index=True)
-    user_id=Column(Integer,ForeignKey("users.id"))
-    label=Column(SQLEnum(AddressStatusEnum),nullable=False)
-    street=Column(String,nullable=False)
-    city=Column(String,nullable=False)
-    zip_code=Column(String,nullable=False)
-    is_default=Column(Boolean,default=False)
-    created_at=Column(DateTime,default=datetime.utcnow)
+    id  = Column(Integer,primary_key=True,index=True)
+    user_id =   Column(Integer,ForeignKey("users.id"),nullable=False,index=True)
+    label   =  Column(SQLEnum(AddressStatusEnum),nullable=False)
+    street  =   Column(String(150),nullable=False)
+    city    =   Column(String(100),nullable=False)
+    zip_code =   Column(String(10),nullable=False)
+    is_default = Column(Boolean,default=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc),
+                        onupdate=lambda: datetime.now(timezone.utc))
 
     #relationship
-    user_relationship=relationship("User",back_populates="address_relationship")
-    order_relationship=relationship("Order_Model",back_populates="address_relationship")
+    user=relationship("User",back_populates="address")
+    orders = relationship("Order_Model", back_populates="address", cascade="all, delete-orphan", lazy="select")
+
+    def __repr__(self):
+         return f"<Delivery_Model user_id={self.user_id} city={self.city} label={self.label}>"

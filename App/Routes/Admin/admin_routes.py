@@ -7,8 +7,33 @@ from App.DataModels.Order.order_model import Order_Model
 from App.Schemas.Order.order_schemas import OrderResponseSchema
 from App.Schemas.Auth_Users.User_Schema.register_schema import UserResponseSchema 
 from App.Utils.constant import OrderStatusEnum
+from sqlalchemy import func
+from datetime import date
 from typing import List
 admin_router=APIRouter()
+
+#1.==============================Get Admin Stats(Admin)===================================
+@admin_router.get("/get_stats_admin",status_code=status.HTTP_200_OK)
+def get_admin_stats(db:Session=Depends(get_db),user:User=Depends(require_admin)):
+    #1.Fetching the orders of today
+    today_date=date.today()
+
+    total_orders_today=db.query(Order_Model).filter(func.date(Order_Model.created_at)==today_date).count()
+    
+    total_revenue_today=db.query(func.sum(Order_Model.total_price)).filter(func.date(Order_Model.created_at)==today_date).scalar() or 0
+    total_orders_all_time=db.query(func.count(Order_Model.id)).scalar()
+    total_revenue_all_time=db.query(func.sum(Order_Model.total_price)).scalar()
+    total_users=db.query(func.count(User.id)).scalar()
+    total_pending_orders=db.query(func.count(Order_Model.id)).filter(Order_Model.status=="Pending").scalar()
+
+    return {
+        "Total Orders Today":total_orders_today,
+        "Total Revenue Today":total_revenue_today,
+        "Total Orders All Time":total_orders_all_time,
+        "Total Revenue All Time":total_revenue_all_time,
+        "Total User":total_users,
+        "Total Pending Orders":total_pending_orders
+    }
 
 #2.=============================Get All User (Admin)=======================================
 @admin_router.get("/get_all_user/admin",status_code=status.HTTP_200_OK,response_model=List[UserResponseSchema])
@@ -28,7 +53,7 @@ def deactivate_user(user_id:int,db:Session=Depends(get_db),user:User=Depends(req
     if not db_user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="User not Found !")
     #3.Updating User Status
-    db_user.is_active="False"
+    db_user.is_active=False
     db.commit()
     db.refresh(db_user)
     return db_user
@@ -42,7 +67,7 @@ def activate_user(user_id:int,db:Session=Depends(get_db),user:User=Depends(requi
     if not db_user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="User not Found !")
     #3.Updating User Status
-    db_user.is_active="True"
+    db_user.is_active=True
     db.commit()
     db.refresh(db_user)
     return db_user
@@ -73,5 +98,5 @@ def get_all_orders(order_status:OrderStatusEnum,db:Session=Depends(get_db),user:
     db_orders=db.query(Order_Model).filter(Order_Model.status==order_status.value).all()
     #2.Raise Error if Order belong to that status not found
     if not db_orders:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUNDm,detail=f"No {order_status.value} is Found in Database")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail=f"No {order_status.value} Order is Found in Database")
     return db_orders

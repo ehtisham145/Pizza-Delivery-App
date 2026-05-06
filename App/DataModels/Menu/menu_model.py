@@ -1,111 +1,74 @@
-from sqlalchemy import Integer,Column,Table,String,DateTime,Boolean,ForeignKey,Float,Enum as SQLEnum
-from App.Utils.constant import PizzaCategoryEnum,PizzaSizeEnum
+from datetime import datetime, timezone
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime, Numeric
+from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.orm import relationship
 from App.Database.database import Base
-from typing import Optional
-from datetime import datetime
-from App.DataModels.Order.order_model import Order_Model
-import enum
-#=========================Category Table===========================
+from App.Utils.constant import PizzaCategoryEnum, PizzaSizeEnum
 
+#1.=========================Category Table===========================
 class Category_Model(Base):
-    
     __tablename__="categories"
-    
     id=Column(Integer,primary_key=True,index=True)
-    
     name = Column(
         SQLEnum(PizzaCategoryEnum, values_callable=lambda obj: [item.value for item in obj]),
         index=True, 
         unique=True, 
         nullable=False
     )
-    
     description=Column(String(500),nullable=True)
-    
-    created_at:Optional=Column(DateTime,default=datetime.utcnow)
-
-    
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     def __repr__(self): # Check whether data table is working correctly in Database
-        return f"<Category (name={self.name}, size={self.description})>"
+        return f"<Category (name={self.name}>"
 
-#========================== Pizza Table ===========================
-
-
+#2.========================== Pizza Table ===========================
 class Pizza_Model(Base):
-
-    __tablename__ = "pizza" # Table names are usually plural by convention
-
-    id = Column(Integer, primary_key=True) # Primary keys are indexed by default
-    
-    # Keep index here: You will search/filter by name often
+    __tablename__ = "pizza" 
+    id = Column(Integer, primary_key=True)    
     name = Column(String(100), index=True,unique=True, nullable=False) 
-    
-    # Remove index: Too long for a standard B-Tree index
     description = Column(String(500), nullable=False)
-    
-    # Index here if you plan to let users "Sort by Price"
-    base_price = Column(Float, index=True, nullable=False)
-    
-    # Remove index: Never used in a WHERE clause
+    base_price = Column(Numeric(10,2), nullable=False)
     image_url = Column(String(255), nullable=False)
-
-    #Deletion of Pizza Status
-    is_deleted=Column(Boolean,default=False,index=True)
-    
-    # Useful for filtering "Out of Stock" items
-    is_available = Column(Boolean, default=True, index=True)
-    
-    # Fixed Foreign Key (Assumes your category table is named 'categories')
-    category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
-    
-    # Use datetime.utcnow (no brackets) so it generates a new time for every entry
-    created_at = Column(DateTime, default=datetime.utcnow)
-    
-    # onupdate ensures the timestamp refreshes whenever the row is edited
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    is_deleted=Column(Boolean,default=False,index=True)    
+    is_available = Column(Boolean, default=True, index=True)    
+    category_id = Column(Integer,ForeignKey("categories.id"),index=True,nullable=False)    
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))    
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc),
+    onupdate=lambda: datetime.now(timezone.utc))
 
     #Relationship
-
-    piz=relationship("Cart_Item",back_populates="piza")
-    order_relationship=relationship("Order_Item_Model",back_populates="pizza_relationship")
-    review_relationship=relationship("Review_Model",back_populates="pizza_relationship")
+    cart_items = relationship("Cart_Item",      back_populates="pizza")
+    order =     relationship("Order_Item_Model",back_populates="pizza")
+    review =    relationship("Review_Model",    back_populates="pizza")
+    
     def __repr__(self): # Check whether data table is working correctly in Database
-        return f"<Pizza(name={self.name}, size={self.description})>"
+        return f"<Pizza(name={self.name}, size={self.base_price})>"
 
-#==========================Size Table===========================
-
-
+#2.==========================Size Table===========================
 class Size_Model(Base):
     __tablename__="size"
     id=Column(Integer,primary_key=True,index=True)
-    
     size=Column(SQLEnum(PizzaSizeEnum, values_callable=lambda obj: [item.value for item in obj]),
         index=True, 
         unique=True, 
         nullable=False)
-
-    price_multiplier = Column(Float, nullable=False, default=1.0)
-
+    price_multiplier = Column(Numeric(10,2), nullable=False, default=1.0)
     #Relationship
-    siz=relationship("Cart_Item",back_populates="size_relationship")
-    def __repr__(self): # Check whether data table is working correctly in Database
-        return f"<Size(name={self.name}, size={self.size})>"
+    cart_items=relationship("Cart_Item",back_populates="size")
+    def __repr__(self):
+        return f"<Size(size={self.size}, multiplier={self.price_multiplier})>"
 
-
-#==========================Topping Table===========================
-
-class ToppingModel(Base):
-    __tablename__="toppings"
+#3.==========================Topping Table===========================
+class Topping_Model(Base):
+    __tablename__="toppings" 
+    id = Column(Integer,primary_key=True,index=True)
+    name =   Column(String(100),index=True,nullable=False)
+    extra_price =    Column(Numeric(10,2),index=True,nullable=False)
+    is_available =   Column(Boolean,default=True,index=True)
+    created_at   = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at   = Column(DateTime, default=lambda: datetime.now(timezone.utc),
+    onupdate=lambda: datetime.now(timezone.utc))
+    #relationship
+    cart_item_toppings = relationship("Cart_Item_Topping", back_populates="topping")
     
-    id=Column(Integer,primary_key=True,index=True)
-    
-    name=Column(String(100),index=True,nullable=False)
-    
-    extra_price=Column(Float,index=True,nullable=False)
-
-    is_available=Column(Boolean,default=True,index=True)
-
-
     def __repr__(self): # Check whether data table is working correctly in Database
         return f"<Topping (name={self.name}, size={self.extra_price})>"
