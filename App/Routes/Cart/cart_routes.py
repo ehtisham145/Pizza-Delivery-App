@@ -31,6 +31,9 @@ def Update_cart_Item_quantity(quantity: int, item_id: int, db: Session = Depends
     
     # 1. Get the user's cart
     user_cart = db.query(Cart_Model).filter(Cart_Model.user_id == user.id).first()
+     
+    if not user_cart:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Cart Not Found")
 
 # 2. Update the item inside that specific cart
     db_item = db.query(Cart_Item).filter(
@@ -63,16 +66,22 @@ def Update_cart_Item_quantity(quantity: int, item_id: int, db: Session = Depends
 @cart_router.delete("/Delete_Entire_Cart",status_code=status.HTTP_200_OK)
 def delete_entire_cart(db:Session=Depends(get_db),user:User=Depends(get_current_user)):
     #Fetching Data from Data Base
-    db_cart=db.query(Cart_Model).filter(Cart_Model.user_id==user.id)
+    cart=db.query(Cart_Model).filter(Cart_Model.user_id==user.id).first()
     #Return Error
-    if not db_cart.first():
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Cart is Empty")
+    if not cart:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Cart is already Empty")
     #Deleting Cart from Database
-    db_cart.delete(synchronize_session=False)
-    db.commit()
-
-    return {"Message":"Your Entire Cart Has Been Cleared !"}
-
+    try:
+        db.query(Cart_Item).filter(Cart_Item.cart_id==cart.id).delete(synchronize_session=False)
+        db.delete(cart)
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to clear cart."
+        )
+    return {"message": "Your cart has been cleared successfully."}
 #==================Remove one item From Cart===============================================
 @cart_router.delete("/Delete_Cart_Item/{item_id}",status_code=status.HTTP_200_OK)
 def delete_cart_item(item_id:int,db:Session=Depends(get_db),user:User=Depends(get_current_user)):
@@ -85,10 +94,17 @@ def delete_cart_item(item_id:int,db:Session=Depends(get_db),user:User=Depends(ge
     if not db_cart_item:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Item not Found in Cart")
     #Deleting Item From Cart Table
-    db.delete(db_cart_item)
-    db.commit()
-
-    return {"Message":"Item has been deleted from Cart Successfully !"}
+    try:
+        db.delete(cart_item)
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete cart item."
+        )
+    
+    return {"message": f"Cart item {item_id} removed successfully."}
 
 
 #================Add item to cart=========================================================
@@ -100,24 +116,24 @@ def add_item_to_cart(
     user: User = Depends(get_current_user)
 ):
     # 1. Fetch Pizza and Size details
-    pizza = db.query(Pizza_Model).filter(Pizza_Model.id == item_id).first()
-    size_obj = db.query(Size_Model).filter(Size_Model.id == item_data.size_id).first()
-    
+    pizza = db.query(Pizza_Model).filter(Pizza_Model.id == item_id, Pizza_Model.is_deleted == False).first()    
     if not pizza:
         raise HTTPException(status_code=404, detail="Pizza not found!")
+    
+    size_obj = db.query(Size_Model).filter(Size_Model.id == item_data.size_id).first()
     if not size_obj:
         raise HTTPException(status_code=404, detail="Invalid size selection!")
 
-    # 2. Calculate dynamic prices based on size multiplier
-    unit_price = pizza.base_price * size_obj.price_multiplier
-    sub_total = unit_price * item_data.quantity
-
-    # 3. Get or Create the User's Cart
+    #2. Get or Create the User's Cart
     user_cart = db.query(Cart_Model).filter(Cart_Model.user_id == user.id).first()
     if not user_cart:
         user_cart = Cart_Model(user_id=user.id)
         db.add(user_cart)
         db.flush() # Use flush to get the ID without fully committing yet
+    
+    #3. Calculate dynamic prices based on size multiplier
+    unit_price = pizza.base_price * size_obj.price_multiplier
+    sub_total = unit_price * item_data.quantity
 
     # 4. Check if this specific Pizza AND Size combination exists in the cart
     cart_item = db.query(Cart_Item).filter(

@@ -9,4 +9,4 @@ PasswordStr=Annotated[str,AfterValidator(validate_password_strength)]
 class ChangePasswordSchema(BaseModel):
     old_password: PasswordStr=Field(...,description="Old Password")
     new_password: PasswordStr=Field(...,description="New Password")
-    confirm_new_password: PasswordStr==Field(...,description="Confirm New Password")
+    confirm_new_password: PasswordStr=Field(...,description="Confirm New Password")

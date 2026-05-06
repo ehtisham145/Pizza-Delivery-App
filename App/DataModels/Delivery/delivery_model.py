@@ -1,6 +1,8 @@
 from sqlalchemy import Column,Integer,String,Boolean,ForeignKey,Enum as SQLEnum,Float,DateTime
 from App.Utils.constant import AddressStatusEnum
 from datetime import datetime,timezone
+from App.Database.database import Base
+from sqlalchemy.orm import relationship
 
 #=================================Delivery Address=============================
 class Delivery_Model(Base):
@@ -18,7 +20,7 @@ class Delivery_Model(Base):
 
     #relationship
     user=relationship("User",back_populates="address")
-    orders = relationship("Order_Model", back_populates="address", cascade="all, delete-orphan", lazy="select")
+    order = relationship("Order_Model", back_populates="address", cascade="all, delete-orphan", lazy="select")
 
     def __repr__(self):
          return f"<Delivery_Model user_id={self.user_id} city={self.city} label={self.label}>"

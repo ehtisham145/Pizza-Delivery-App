@@ -1,7 +1,8 @@
 from decimal import Decimal
 from typing import List, Optional
 from pydantic import BaseModel, Field, ConfigDict
-
+from App.Utils.constant import PizzaSizeEnum
+from App.Schemas.Menu.menu_schema import Pizza_Request
 
 # ======================== Supporting Info Schemas ========================
 class ToppingInfo(BaseModel):
@@ -31,7 +32,7 @@ class AddToCartSchema(BaseModel):
     pizza_id:    int       = Field(..., gt=0,         description="ID of the pizza to add")
     size_id:     int       = Field(..., gt=0,         description="ID of the selected size")
     quantity:    int       = Field(1,  gt=0, le=10,   description="Quantity (max 10 per item)")
-    topping_ids: List[int] = Field(default=[],        description="Optional list of topping IDs")
+    topping_ids: int = Field(...,        description="Optional list of topping IDs")
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -54,9 +55,9 @@ class CartItemResponseSchema(BaseModel):
     quantity:   int          = Field(..., description="Quantity in cart")
     unit_price: Decimal      = Field(..., description="Price per unit")
     sub_total:  Decimal      = Field(..., description="Line total (unit_price × quantity)")
-    size:       SizeInfo
-    pizza:      "PizzaInfo"
-    toppings:   List[ToppingInfo] = []
+    size:       PizzaSizeEnum
+    pizza:      PizzaInfo
+    # toppings:   List[ToppingInfo] = []
 
     model_config = ConfigDict(from_attributes=True)
 

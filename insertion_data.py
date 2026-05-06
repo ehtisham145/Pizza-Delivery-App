@@ -2,8 +2,14 @@ from App.Database.database import SessionLocal
 from App.Utils.middleware import get_password_hash
 from fastapi import Depends
 from App.DataModels.Auth_Users.user_model import User
-from App.DataModels.Menu.menu_model import Category_Model,ToppingModel,Size_Model,Pizza_Model
+from App.DataModels.Menu.menu_model import Category_Model,Topping_Model,Size_Model,Pizza_Model
+from App.DataModels.Order.order_model import Order_Model
+from App.DataModels.Reviews.reviews_model import Review_Model
+from App.DataModels.Payment.payment_model import Payment_Model
+from App.DataModels.Notifications.notification_model import Notification_Model
+from App.DataModels.Delivery.delivery_model import Delivery_Model
 from App.Utils.constant import PizzaCategoryEnum,PizzaToppingEnum,PizzaSizeEnum
+from App.DataModels.Cart.cart_model import Cart_Model
 #1.=============Inserting Data in user Table==================
 def insert_users():
     try:
@@ -88,11 +94,11 @@ def insert_toppings():
         toppings_to_insert=[topping.value for topping in PizzaToppingEnum]
         for topping_name in toppings_to_insert:
             # Check if the topping already exists in the database to prevent UNIQUE constraint violations
-            existing = db.query(ToppingModel).filter(ToppingModel.name == topping_name).first()
+            existing = db.query(Topping_Model).filter(Topping_Model.name == topping_name).first()
             
             if not existing:
                 # Create a new instance of the Topping_Model if it doesn't exist
-                new_topping = ToppingModel(
+                new_topping = Topping_Model(
                     name = topping_name,
                     extra_price = 150.0,
                     is_available=True  # Assigning a default price for all initial toppings
@@ -240,11 +246,11 @@ def insert_pizzas():
 
 
 if __name__=="__main__":
-    # insert_pizzas()
     # insert_toppings()
     # insert_pizza_sizes()
     insert_pizzas()
     # insert_users()
+    # insert_categories()
     
 
 

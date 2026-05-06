@@ -10,10 +10,10 @@ from App.Database.database import Base
 class Order_Model(Base):
     __tablename__="orders"
     id =      Column(String,primary_key=True,default=lambda: str(uuid.uuid4()))
-    user_id = Column(Integer,ForeignKey("users.id"),ondelete="CASCADE",nullabl=False,index=True) #Foreign  Key
+    user_id = Column(Integer,ForeignKey("users.id",ondelete="CASCADE"),nullable=False,index=True) #Foreign  Key
     status =  Column(SQLEnum(OrderStatusEnum),nullable=False)
     total_price= Column(Numeric(10,2),nullable=False)
-    address_id=  Column(ForeignKey("delivery_addresses.id"),index=True,nullable=False, ondelete="SET NULL")
+    address_id=  Column(ForeignKey("delivery_addresses.id",ondelete="SET NULL"),index=True,nullable=False)
     notes =      Column(String,nullable=True)
     created_at  = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at  = Column(DateTime, default=lambda: datetime.now(timezone.utc),
@@ -33,7 +33,7 @@ class Order_Model(Base):
 class Order_Item_Model(Base):
     __tablename__="order_items"
     id =        Column(Integer,primary_key=True)
-    order_id =  Column(String, ForeignKey("orders.id",on_delete="CASCADE") ,index=True,nullable=False) #Foreign  Key
+    order_id =  Column(String, ForeignKey("orders.id",ondelete="CASCADE"),index=True,nullable=False) #Foreign  Key
     pizza_id =   Column(Integer,ForeignKey("pizza.id"),index=True,nullable=False) #Foreign  Key
     pizza_name = Column(String,nullable=False)
     size_name =  Column(SQLEnum(PizzaSizeEnum),nullable=False)

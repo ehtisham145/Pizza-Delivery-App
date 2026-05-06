@@ -9,7 +9,7 @@ from App.Utils.constant import PaymentMethodEnum, PaymentStatusEnum
 
 class Payment_Model(Base):
     __tablename__="payments"
-    id ==       Column(String,primary_key=True,default=lambda: str(uuid.uuid4()))
+    id =      Column(String,primary_key=True,default=lambda: str(uuid.uuid4()))
     order_id =   Column(String,ForeignKey("orders.id", ondelete="CASCADE"),index=True,unique=True)
     user_id =    Column(Integer,ForeignKey("users.id", ondelete="CASCADE"),index=True)
     transaction_id = Column(String(255), unique=True, index=True, nullable=True)

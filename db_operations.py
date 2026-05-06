@@ -4,7 +4,14 @@ from sqlalchemy.orm import Session
 from App.DataModels.Menu.menu_model import Category_Model,Size_Model
 from sqlalchemy import text,inspect
 from App.Utils.constant import PizzaSizeEnum
+from App.DataModels.Cart.cart_model import Cart_Model
 from App.DataModels.Order.order_model import Order_Model
+from App.DataModels.Menu.menu_model import Category_Model,Topping_Model,Size_Model,Pizza_Model
+from App.DataModels.Order.order_model import Order_Model
+from App.DataModels.Reviews.reviews_model import Review_Model
+from App.DataModels.Payment.payment_model import Payment_Model
+from App.DataModels.Notifications.notification_model import Notification_Model
+from App.DataModels.Delivery.delivery_model import Delivery_Model
 #============================User Role Upgradation===============================
 def update_user_role(user_email: str, new_role: str):
     """
@@ -130,7 +137,7 @@ def drop_tables():
     db=next(db_gen)
 
     try:
-        db.execute(text("DROP TABLE IF EXISTS reviews"))
+        db.execute(text("DROP TABLE IF EXISTS pizza"))
 
         print("Tables Deleted Successfully")
     except Exception as e:

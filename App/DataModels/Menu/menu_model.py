@@ -53,7 +53,7 @@ class Size_Model(Base):
         nullable=False)
     price_multiplier = Column(Numeric(10,2), nullable=False, default=1.0)
     #Relationship
-    cart_items=relationship("Cart_Item",back_populates="size")
+    cart_items=relationship("Cart_Item",back_populates="size_cart")
     def __repr__(self):
         return f"<Size(size={self.size}, multiplier={self.price_multiplier})>"
 

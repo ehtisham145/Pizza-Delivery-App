@@ -1,7 +1,8 @@
 from sqlalchemy.orm import Session
 from App.Database.database import Base
-from sqlalchemy import Column,Integer,String,Float,Boolean,DateTime,ForeignKey,Numeric
+from sqlalchemy import Column,Integer,String,Float,Boolean,DateTime,ForeignKey,Numeric,Enum as SQLEnum
 from sqlalchemy.orm import relationship
+from App.Utils.constant import PizzaSizeEnum
 from datetime import datetime,timezone
 
 #========================Cart Table========================
@@ -37,7 +38,7 @@ class Cart_Item(Base):
     cart_id =    Column(Integer,ForeignKey("cart.id"),index=True,nullable=False)
     pizza_id =   Column(Integer,ForeignKey("pizza.id"),index=True,nullable=False)
     size_id =    Column(Integer,ForeignKey("size.id"),index=True,nullable=False)
-    size =   Column(String,nullable=False)
+    size =   Column(SQLEnum(PizzaSizeEnum),nullable=False)
     quantity =   Column(Integer,default=1,nullable=False)
     unit_price = Column(Numeric(10, 2), nullable=False)
     sub_total  = Column(Numeric(10, 2), nullable=False)
@@ -45,7 +46,7 @@ class Cart_Item(Base):
     #Relationship
     cart = relationship("Cart_Model",   back_populates="items")
     pizza = relationship("Pizza_Model", back_populates="cart_items") 
-    size= relationship("Size_Model",    back_populates="cart_items") 
+    size_cart= relationship("Size_Model",    back_populates="cart_items") 
     topping = relationship("Cart_Item_Topping", back_populates="cart_item" , cascade="all, delete-orphan")
 
 
@@ -56,4 +57,5 @@ class Cart_Item_Topping(Base):
     topping_id = Column(Integer, ForeignKey("toppings.id"), primary_key=True, nullable=False)
 
     #Relationship
-    cart_item = relationship("Cart_Item", back_populates="toppings")
+    cart_item = relationship("Cart_Item", back_populates="topping")
+    topping = relationship("Topping_Model",back_populates="cart_item_toppings")

@@ -7,7 +7,7 @@ from App.Database.database import get_db
 from App.DataModels.Auth_Users.user_model import User
 from typing import List
 from App.Utils.constant import PizzaCategoryEnum,PizzaSizeEnum
-from App.DataModels.Menu.menu_model import Category_Model,Pizza_Model,Size_Model,ToppingModel 
+from App.DataModels.Menu.menu_model import Category_Model,Pizza_Model,Size_Model,Topping_Model 
 from App.Schemas.Menu.menu_schema import Category_Request,Category_Response,Pizza_Request,Pizza_Response,Size_Response,Size_Request,Topping_Request,Topping_Response 
 #Creating a Router for Menu related work
 menu_router=APIRouter()
@@ -106,7 +106,7 @@ def Update_Pizza_Status(pizza_data:Pizza_Request,pizza_id:int,db:Session=Depends
 
 
 #===================== Soft Delete Pizza (Admin/Staff Only) ===================
-@menu_router.put("/pizzas/{pizza_id}", status_code=status.HTTP_200_OK)
+@menu_router.delete("/pizzas/{pizza_id}", status_code=status.HTTP_200_OK)
 def delete_pizza(pizza_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
 
     allowed_roles = ["admin", "staff"]
@@ -129,12 +129,10 @@ def delete_pizza(pizza_id: int, db: Session = Depends(get_db), user: User = Depe
         )
 
     # 4. Soft Delete Execution: Update flags instead of row removal
-    pizza.is_deleted = True
-    pizza.is_available = False
+    db.delete(pizza)
 
     # 5. Persistence: Commit changes to the database
     db.commit()
-    db.refresh(pizza)
     
     return {"message": "Pizza successfully deactivated and hidden from the menu."}
 
@@ -166,13 +164,13 @@ def View_Categories(db:Session=Depends(get_db),user:User=Depends(get_current_use
 @menu_router.post("/Create_Toppings",status_code=status.HTTP_201_CREATED,response_model=Topping_Response)
 def create_topping(topping_data:Topping_Request,db:Session=Depends(get_db),user:User=Depends(require_admin)):
     # 1.Check Uniqueness
-    existing_topping=db.query(ToppingModel).filter(topping_data.name==ToppingModel.name).first()
+    existing_topping=db.query(Topping_Model).filter(topping_data.name==Topping_Model.name).first()
     if existing_topping:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, 
             detail="Topping already exists."
     )# Execution: If we got here, everything is valid
-    new_topping=ToppingModel(
+    new_topping=Topping_Model(
                 name=topping_data.name,
                 extra_price=topping_data.extra_price
             )
@@ -187,7 +185,7 @@ def create_topping(topping_data:Topping_Request,db:Session=Depends(get_db),user:
 @menu_router.get("/All_Toppings",status_code=status.HTTP_200_OK,response_model=List[Topping_Response])
 def get_all_toppings(db:Session=Depends(get_db),user:User=Depends(get_current_user)):
     #1. Accessing all topping in database
-    toppings=db.query(ToppingModel).all()
+    toppings=db.query(Topping_Model).all()
     #2.Check whether Toppings are present or not
     if not toppings:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="No Toppings is added by Admin in Data Base !")
@@ -198,7 +196,7 @@ def get_all_toppings(db:Session=Depends(get_db),user:User=Depends(get_current_us
 @menu_router.put("/Update_Topping/{topping_id}")
 def Update_Topping(topping_data:Topping_Request,topping_id:int,db:Session=Depends(get_db),user:User=Depends(require_admin)):
     #1.Search Topping Id
-    db_topping=db.query(ToppingModel).filter(ToppingModel.id==topping_id).first()
+    db_topping=db.query(Topping_Model).filter(Topping_Model.id==topping_id).first()
     #2.Raise Error if id not found
     if not db_topping:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="No Topping is found with this id in data base !")
