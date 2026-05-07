@@ -10,7 +10,7 @@ from App.Database.database import get_db
 from App.DataModels.Auth_Users.user_model import User
 from App.DataModels.Auth_Users.black_list_token_model import BlackListTokens
 from fastapi.security import OAuth2PasswordBearer
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/Login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 from dotenv import load_dotenv 
 load_dotenv()
 #The main purpose of this script is to check whether user has the token or not

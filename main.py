@@ -28,7 +28,7 @@ add_exception_handlers(app)
 
 #================Including Router in main.py===============    
 
-app.include_router(auth_router,prefix='/auth',tags=['Authentication'])
+app.include_router(auth_router,prefix='/auth',tags=['Auth'])
 app.include_router(profile_router,prefix="/profile",tags=["Profile"])
 app.include_router(menu_router,prefix="/menu",tags=["Menu Management"])
 app.include_router(cart_router,prefix="/cart",tags=["Cart"])

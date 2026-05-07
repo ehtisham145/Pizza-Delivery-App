@@ -153,11 +153,24 @@ def check_tables():
     tables = inspector.get_table_names()
     print("Current tables in database:", tables)
 
+def active_admin_status(email:str):
+    db_gen = get_db()
+    db = next(db_gen)
+
+    admin_data=db.query(User).filter(User.email==email).first()
+    if not admin_data:
+        print("Email Not found")
+    else:
+        admin_data.is_active=True
+        db.commit()
+        db.refresh(admin_data)
+    print("Message :Status Updated Successfully !")
+
 # update_user_role("ehtishamexp@gmail.com", "admin")
+active_admin_status("ehtishamexp@gmail.com")
 
 
 
-
-if __name__ == "__main__":
-    drop_tables()
+# if __name__ == "__main__":
+#     drop_tables()
     
