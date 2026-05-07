@@ -5,7 +5,6 @@ from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 import os
 import logging
-
 from App.Database.database import get_db
 from App.DataModels.Auth_Users.refresh_token_model import RefreshTokenModel
 from App.DataModels.Auth_Users.user_model import User
