@@ -1,102 +1,211 @@
-from App.Database.database import Base,get_db
+from App.Database.database import Base, get_db
 from sqlalchemy.orm import Session
-from fastapi import Depends,HTTPException,status,APIRouter
-from App.Utils.middleware import get_current_user,require_admin
+from sqlalchemy import func
+from fastapi import Depends, HTTPException, status, APIRouter, Query
+from App.Utils.middleware import get_current_user, require_admin,get_user_or_404
 from App.DataModels.Auth_Users.user_model import User
 from App.DataModels.Order.order_model import Order_Model
 from App.Schemas.Order.order_schemas import OrderResponseSchema
-from App.Schemas.Auth_Users.User_Schema.register_schema import UserResponseSchema 
-from App.Utils.constant import OrderStatusEnum
-from sqlalchemy import func
+from App.Schemas.Auth_Users.User_Schema.register_schema import UserResponseSchema
+from App.Utils.constant import OrderStatusEnum,RoleEnum
+from App.Utils.db_helper import safe_commit
 from datetime import date
 from typing import List
-admin_router=APIRouter()
+from enum import Enum
 
-#1.==============================Get Admin Stats(Admin)===================================
-@admin_router.get("/get_stats_admin",status_code=status.HTTP_200_OK)
-def get_admin_stats(db:Session=Depends(get_db),user:User=Depends(require_admin)):
-    #1.Fetching the orders of today
-    today_date=date.today()
+admin_router = APIRouter()
 
-    total_orders_today=db.query(Order_Model).filter(func.date(Order_Model.created_at)==today_date).count()
-    
-    total_revenue_today=db.query(func.sum(Order_Model.total_price)).filter(func.date(Order_Model.created_at)==today_date).scalar() or 0
-    total_orders_all_time=db.query(func.count(Order_Model.id)).scalar()
-    total_revenue_all_time=db.query(func.sum(Order_Model.total_price)).scalar()
-    total_users=db.query(func.count(User.id)).scalar()
-    total_pending_orders=db.query(func.count(Order_Model.id)).filter(Order_Model.status=="Pending").scalar()
+
+# 1. Get Admin Stats ─────────────────────────────────────────────────────────
+
+@admin_router.get("/get_stats_admin", status_code=status.HTTP_200_OK)
+def get_admin_stats(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
+    today = date.today()
+
+    # Merge today's aggregations into a single query
+    today_stats = (
+        db.query(
+            func.count(Order_Model.id).label("orders"),
+            func.coalesce(func.sum(Order_Model.total_price), 0).label("revenue"),
+        )
+        .filter(func.date(Order_Model.created_at) == today)
+        .one()
+    )
+
+    # All-time stats
+    all_time_stats = (
+        db.query(
+            func.count(Order_Model.id).label("orders"),
+            func.coalesce(func.sum(Order_Model.total_price), 0).label("revenue"),
+        )
+        .one()
+    )
+
+    total_users = db.query(func.count(User.id)).scalar()
+    total_pending = (
+        db.query(func.count(Order_Model.id))
+        .filter(Order_Model.status == "Pending")
+        .scalar()
+    )
 
     return {
-        "Total Orders Today":total_orders_today,
-        "Total Revenue Today":total_revenue_today,
-        "Total Orders All Time":total_orders_all_time,
-        "Total Revenue All Time":total_revenue_all_time,
-        "Total User":total_users,
-        "Total Pending Orders":total_pending_orders
+        "total_orders_today": today_stats.orders,
+        "total_revenue_today": today_stats.revenue,
+        "total_orders_all_time": all_time_stats.orders,
+        "total_revenue_all_time": all_time_stats.revenue,
+        "total_users": total_users,
+        "total_pending_orders": total_pending,
     }
 
-#2.=============================Get All User (Admin)=======================================
-@admin_router.get("/get_all_user/admin",status_code=status.HTTP_200_OK,response_model=List[UserResponseSchema])
-def get_all_user(db:Session=Depends(get_db),user:User=Depends(require_admin)):
-    #1.Fetching all users
-    db_users=db.query(User).all()
-    #2.Raise Error if table Empty
-    if not db_users:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="No User is Added in Data Base Yet !")
-    return db_users
-#3.==============================Deactivate a User (Admin)===================================
-@admin_router.patch("/deactivate_user/admin/{user_id}",status_code=status.HTTP_200_OK,response_model=UserResponseSchema)
-def deactivate_user(user_id:int,db:Session=Depends(get_db),user:User=Depends(require_admin)):
-    #1.Checking user Exists
-    db_user=db.query(User).filter(User.id==user_id).first()
-    #2.Raise Error if User not Exists
-    if not db_user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="User not Found !")
-    #3.Updating User Status
-    db_user.is_active=False
-    db.commit()
-    db.refresh(db_user)
-    return db_user
 
-#4.==============================Activate a User (Admin)===================================
-@admin_router.patch("/activate_user/admin/{user_id}",status_code=status.HTTP_200_OK,response_model=UserResponseSchema)
-def activate_user(user_id:int,db:Session=Depends(get_db),user:User=Depends(require_admin)):
-    #1.Checking user Exists
-    db_user=db.query(User).filter(User.id==user_id).first()
-    #2.Raise Error if User not Exists
-    if not db_user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="User not Found !")
-    #3.Updating User Status
-    db_user.is_active=True
-    db.commit()
-    db.refresh(db_user)
-    return db_user
+# 2. Get All Users ────────────────────────────────────────────────────────────
 
-#5.============================Change User Role (Admin)==================================
-@admin_router.patch("/change_role/admin/{user_id}",status_code=status.HTTP_200_OK,response_model=UserResponseSchema)
-def change_role(assign_role:str,user_id:int,db:Session=Depends(get_db),user:User=Depends(require_admin)):
-    assign_role=assign_role.lower()
-    #1.Checking user Exists
-    db_user=db.query(User).filter(User.id==user_id).first()
-    #2.Raise Error if User not Exists
-    if not db_user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="User not Found !")
-    #3.Check role of new user
-    if db_user.role=="admin":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,detail="Admin cannot Update Admin Role")
-    #4.Updating User Role
-    db_user.role=assign_role
-    db.commit()
-    db.refresh(db_user)
+@admin_router.get(
+    "/get_all_user/admin",
+    status_code=status.HTTP_200_OK,
+    response_model=List[UserResponseSchema],
+)
+def get_all_users(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
+    users = db.query(User).all()
+    if not users:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No users found in the database.",
+        )
+    return users
 
-    return db_user
-    
-#6.============================Get All Order with Filters(Admin)==================================
-@admin_router.get("/get_all_orders/admin/{order_status}",status_code=status.HTTP_200_OK,response_model=List[OrderResponseSchema])
-def get_all_orders(order_status:OrderStatusEnum,db:Session=Depends(get_db),user:User=Depends(require_admin)):
-    #1.Fetching orders with status
-    db_orders=db.query(Order_Model).filter(Order_Model.status==order_status.value).all()
-    #2.Raise Error if Order belong to that status not found
-    if not db_orders:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail=f"No {order_status.value} Order is Found in Database")
-    return db_orders
+
+# 3. Deactivate a User ────────────────────────────────────────────────────────
+
+@admin_router.patch(
+    "/deactivate_user/admin/{user_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=UserResponseSchema,
+)
+def deactivate_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
+    # Guard: admin cannot deactivate themselves
+    if user_id == current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You cannot deactivate your own account.",
+        )
+
+    target = get_user_or_404(user_id, db)
+
+    if not target.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User is already inactive.",
+        )
+
+    target.is_active = False
+    safe_commit(db)
+    db.refresh(target)
+    return target
+
+
+# 4. Activate a User ──────────────────────────────────────────────────────────
+
+@admin_router.patch(
+    "/activate_user/admin/{user_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=UserResponseSchema,
+)
+def activate_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
+    target = get_user_or_404(user_id, db)
+
+    if target.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User is already active.",
+        )
+
+    target.is_active = True
+    safe_commit(db)
+    db.refresh(target)
+    return target
+
+
+# 5. Change User Role ─────────────────────────────────────────────────────────
+ALLOWED_ROLES = {role.value for role in RoleEnum}   # {"admin", "user", "staff"}
+
+@admin_router.patch(
+    "/change_role/admin/{user_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=UserResponseSchema,
+)
+def change_role(
+    user_id: int,
+    assign_role: RoleEnum = Query(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
+    # 1. Fetch target user
+    target = get_user_or_404(user_id, db)
+
+    #2. Resolve to string value first — single source of truth
+    new_role = assign_role.value
+
+    # 3. Defense-in-depth: validate BEFORE touching the object
+    if new_role not in ALLOWED_ROLES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid role '{new_role}'. Allowed: {sorted(ALLOWED_ROLES)}",
+        )
+
+    # 4. Business rules
+    if target.role == RoleEnum.admin.value:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Cannot change the role of another admin.",
+        )
+
+    if target.role == new_role:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"User already has the '{new_role}' role.",
+        )
+
+    # 5. Mutate only after all checks pass
+    target.role = new_role
+    safe_commit(db)
+    db.refresh(target)
+    return target
+
+# 6. Get All Orders with Filter ───────────────────────────────────────────────
+
+@admin_router.get(
+    "/get_all_orders/admin/{order_status}",
+    status_code=status.HTTP_200_OK,
+    response_model=List[OrderResponseSchema],
+)
+def get_all_orders(
+    order_status: OrderStatusEnum,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
+    orders = (
+        db.query(Order_Model)
+        .filter(Order_Model.status == order_status.value)
+        .all()
+    )
+    if not orders:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No '{order_status.value}' orders found.",
+        )
+    return orders

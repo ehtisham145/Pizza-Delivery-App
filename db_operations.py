@@ -167,10 +167,10 @@ def active_admin_status(email:str):
     print("Message :Status Updated Successfully !")
 
 # update_user_role("ehtishamexp@gmail.com", "admin")
-active_admin_status("ehtishamexp@gmail.com")
+# active_admin_status("ehtishamexp@gmail.com")
 
 
 
-# if __name__ == "__main__":
-#     drop_tables()
+if __name__ == "__main__":
+    drop_tables()
     

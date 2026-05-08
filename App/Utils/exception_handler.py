@@ -1,29 +1,34 @@
+import logging
 from fastapi import Request, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
+
+logger = logging.getLogger(__name__)
+
+
 def add_exception_handlers(app):
-    
+
     @app.exception_handler(IntegrityError)
-    async def database_integrity_error(request: Request, exc: IntegrityError):
-        print(f"Integrity Error: {exc}")
+    async def integrity_error_handler(request: Request, exc: IntegrityError):
+        logger.error(f"IntegrityError on {request.method} {request.url}: {exc}")
         return JSONResponse(
             status_code=status.HTTP_400_BAD_REQUEST,
-            content={"detail": "Database constraint violation (e.g., duplicate entry)."}
+            content={"detail": "Duplicate entry or constraint violation."},
         )
 
     @app.exception_handler(SQLAlchemyError)
-    async def sqlalchemy_exception_handler(request: Request, exc: SQLAlchemyError):
-        print(f"Database Error: {exc}")
+    async def sqlalchemy_error_handler(request: Request, exc: SQLAlchemyError):
+        logger.error(f"SQLAlchemyError on {request.method} {request.url}: {exc}")
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"detail": "A database error occurred."}
+            content={"detail": "A database error occurred."},
         )
 
     @app.exception_handler(Exception)
-    async def general_exception_handler(request: Request, exc: Exception):
-        print(f"Global Unexpected Error: {exc}")
+    async def general_error_handler(request: Request, exc: Exception):
+        logger.exception(f"Unexpected error on {request.method} {request.url}")
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"detail": "An internal server error occurred."}
+            content={"detail": "An internal server error occurred."},
         )

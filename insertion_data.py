@@ -223,8 +223,7 @@ def insert_pizzas():
                     base_price = p_data["price"],
                     category_id = p_data["cat"],
                     image_url = f"uploads/pizzas/{p_data['name'].lower().replace(' ', '_')}.jpg",
-                    is_available = True,
-                    is_deleted = False
+                    is_available = True
                 )
                 db.add(new_pizza)
                 print(f"✅ Inserted: {p_data['name']}")

@@ -4,6 +4,7 @@ from App.Schemas.Auth_Users.User_Schema.update_schema import UserUpdateSchema
 from App.Schemas.Auth_Users.Password_Schema.change_password_schema import ChangePasswordSchema
 from App.Utils.middleware import get_current_user,get_password_hash,verify_password 
 from App.DataModels.Auth_Users.user_model import User
+from App.Utils.db_helper import safe_commit
 from App.Database.database import get_db
 import logging
 logger=logging.getLogger(__name__)
@@ -56,7 +57,7 @@ def Update_Profile(update_data:UserUpdateSchema,current_user:User=Depends(get_cu
         return {"message": "No changes provided.", "full_name": current_user.full_name}
 
     try:
-        db.commit()
+        safe_commit(db)
         db.refresh(current_user)
     except SQLAlchemyError as e:
         db.rollback()
@@ -96,7 +97,7 @@ def ChangePassword(data:ChangePasswordSchema,current_user:User=Depends(get_curre
    #3.Updating Password
     current_user.password = get_password_hash(data.new_password)
     
-    db.commit()
+    safe_commit(db)
     db.refresh(current_user)
 
     return {"New Password : ": current_user.password}

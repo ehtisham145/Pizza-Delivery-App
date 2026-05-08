@@ -20,7 +20,7 @@ from App.Utils.middleware import (
     create_refresh_token,
     verify_refresh_token,
 )
-
+from App.Utils.db_helper import safe_commit
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -89,7 +89,7 @@ def register_user(user: UserRegisterSchema, db: Session = Depends(get_db)):
     # 5. Persist with robust error handling
     try:
         db.add(new_user)
-        db.commit()
+        safe_commit(db)
         db.refresh(new_user)
         return new_user   # ✅ return ORM object (matches UserResponseSchema)
 
@@ -172,7 +172,7 @@ def login(data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
 
     try:
         db.add(new_db_refresh_token)
-        db.commit()
+        safe_commit(db)
         db.refresh(new_db_refresh_token)
     except Exception as e:
         db.rollback()
@@ -221,7 +221,7 @@ def logout(
 
     # 3. Blacklist the token
     db.add(BlackListTokens(token=clean_token))
-    db.commit()
+    safe_commit(db)
 
     return {"message": "Logout successful!"}
 
@@ -268,7 +268,7 @@ def refresh_access_token(payload: RefreshTokenRequest, db: Session = Depends(get
                 is_revoked=False,
             )
         )
-        db.commit()
+        safe_commit(db)
     except Exception as e:
         db.rollback()
         logger.error(f"Failed to rotate refresh token: {e}")

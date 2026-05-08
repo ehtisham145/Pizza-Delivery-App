@@ -125,3 +125,19 @@ def require_admin(user: User = Depends(get_current_user)):
             detail="Access denied. Admin privileges required."
         )
     return user
+
+# ── Role admin or staff ───────────────────────────────────────────────────────────────
+def require_admin_or_staff(user: User = Depends(get_current_user)) -> User:
+    if user.role not in ("admin", "staff"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied: admin or staff role required.",
+        )
+    return user
+
+def get_user_or_404(user_id: int, db: Session) -> User:
+    """Reusable helper — fetch a user or raise 404."""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
+    return user

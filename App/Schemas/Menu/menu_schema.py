@@ -103,3 +103,7 @@ class Topping_Response(BaseModel):
     updated_at:   Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+class Update_Pizza_Status(BaseModel):
+    """Updating Pizza Status"""
+    is_available:bool=Field(...,description="Status of Pizza")

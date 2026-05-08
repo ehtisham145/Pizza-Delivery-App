@@ -49,3 +49,9 @@ class PaymentMethodEnum(str,Enum):
     CASH_ON_DELIVERY="Cash on Delivery"
 
 
+# --- Enums & Helpers ---
+
+class RoleEnum(str, Enum):
+    admin = "admin"
+    user = "user"
+    staff = "staff"  # extend as needed

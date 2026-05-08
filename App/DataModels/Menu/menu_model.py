@@ -28,7 +28,6 @@ class Pizza_Model(Base):
     description = Column(String(500), nullable=False)
     base_price = Column(Numeric(10,2), nullable=False)
     image_url = Column(String(255), nullable=False)
-    is_deleted=Column(Boolean,default=False,index=True)    
     is_available = Column(Boolean, default=True, index=True)    
     category_id = Column(Integer,ForeignKey("categories.id"),index=True,nullable=False)    
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))    
