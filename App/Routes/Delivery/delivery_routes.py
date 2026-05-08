@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session,joinedload
 from fastapi import HTTPException,status,Depends,APIRouter
 from App.DataModels.Delivery.delivery_model import Delivery_Model
 from App.DataModels.Auth_Users.user_model import User
+from App.DataModels.Order.order_model import Order_Model
 from sqlalchemy import func
 from App.Schemas.Delivery.address_schema import AddressCreateSchema,AddressResponseSchema,UpdateAddressSchema
 #===================Delivery Router======================
@@ -48,7 +49,7 @@ def get_all_addresses(db:Session=Depends(get_db),user:User=Depends(get_current_u
     if not valid_user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="User has not any address in db")
     #3.Fetch all addresses
-    all_address=db.query(Delivery_Model).options(joinedload(Delivery_Model.user_relationship)).filter(
+    all_address=db.query(Delivery_Model).options(joinedload(Delivery_Model.user)).filter(
         Delivery_Model.user_id==user.id
     ).all()
 

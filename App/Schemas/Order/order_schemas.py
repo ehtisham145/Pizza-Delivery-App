@@ -51,3 +51,9 @@ class OrderHistorySchema(BaseModel):
     orders:    List[OrderResponseSchema] = []
 
     model_config = ConfigDict(from_attributes=True)
+
+#5.=========================Place Order Schema=============================
+
+class PlaceOrderSchema(BaseModel):
+    address_id : int = Field(...,description="ID of your Address")
+    notes: str | None

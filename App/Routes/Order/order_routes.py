@@ -1,8 +1,8 @@
 from fastapi import APIRouter,HTTPException,Depends,status
 from sqlalchemy.orm import Session,joinedload
-from datetime import datetime
-from uuid import UUID
+from datetime import datetime,timedelta,timezone
 from typing import List
+import logging
 from fastapi import Form
 
 from App.Database.database import get_db
@@ -12,37 +12,55 @@ from App.DataModels.Auth_Users.user_model import User
 from App.DataModels.Order.order_model import Order_Model,Order_Item_Model
 from App.DataModels.Cart.cart_model import Cart_Model,Cart_Item
 from App.DataModels.Menu.menu_model import Pizza_Model
+from App.DataModels.Delivery.delivery_model import Delivery_Model
 from App.Schemas.Order.order_schemas import (
  OrderResponseSchema,
  OrderItemSchema,
- OrderStatusUpdateSchema
+ OrderStatusUpdateSchema,
+ PlaceOrderSchema
 )
 from App.Schemas.Order.order_schemas import OrderHistorySchema
 from App.Utils.validator import validate_uuid
 from App.Utils.constant import OrderStatusEnum
 
 
-#Create Order Router
+#------------------------------Create Order Router--------------------------------
 order_router=APIRouter()
 
 #1)=================================Place Order From Cart===============================
 
 @order_router.post("/place_order_from_cart/user",status_code=status.HTTP_201_CREATED)
-def place_order_from_cart(db:Session=Depends(get_db),user:User=Depends(get_current_user)):
+def place_order_from_cart(payload:PlaceOrderSchema,db:Session=Depends(get_db),user:User=Depends(get_current_user)):
     
-    #1.Check Whether the Cart belongs to User
-    user_cart=db.query(Cart_Model).filter(Cart_Model.user_id==user.id).first()
+    #1.Validate Address Belongs to User or Not
+    address=db.query(Delivery_Model).filter(
+        Delivery_Model.id==payload.address_id,
+        Delivery_Model.user_id==user.id
+    ).first()
+
+    #2.Raise Error If Address Not Found
+    if not address:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+        detail="Delivery Address Does not found or not belong to you !")
     
-    #2.Raise Error If Cart donot belongs to User
+    # 3.Fetch Cart and User in a single query
+    user_cart=(db.query(Cart_Model).options(
+        joinedload(Cart_Model.items)).filter(
+            Cart_Model.user_id==user.id
+        ).first()
+    )
+
+    #4.Raise Error If Cart donot belongs to User
     if not user_cart:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Cart not found !")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+        detail="Cart not found !")
+
+    #5.Cart Item
+    cart_items = user_cart.items  # already loaded, no extra query
     
-    #3.Checking Items in Cart
-    cart_items=db.query(Cart_Item).filter(Cart_Item.cart_id==user_cart.id).all()
-    
-    #4.Raise Error If no Cart Item is Present
+    #6.Raise Error if not item found in Cart
     if not cart_items:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Cart is Empty !")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cart is empty!")
         
     pizza_ids={item.pizza_id for item in cart_items}
 
@@ -53,7 +71,7 @@ def place_order_from_cart(db:Session=Depends(get_db),user:User=Depends(get_curre
     )
     pizza_map = {pizza.id: pizza for pizza in pizzas}
 
-     # 5. Validate every pizza still exists before touching the DB
+     #7. Validate every pizza still exists before touching the DB
     missing = pizza_ids - pizza_map.keys()
     if missing:
         raise HTTPException(
@@ -62,22 +80,23 @@ def place_order_from_cart(db:Session=Depends(get_db),user:User=Depends(get_curre
                    "Please update your cart.",
         )
 
-
     try:
-        #5.Total Price
+        #8.Total Price
         total_amount=sum(item.unit_price*item.quantity for item in cart_items)
-        #6.New Order
+        #9.New Order
         new_order=Order_Model(
             user_id=user.id,
             status="Pending",
+            address_id=payload.address_id,
+            notes=payload.notes,
             total_price=total_amount,
             created_at=datetime.utcnow()
         )
-        #7.Adding New order in Database
+        #10.Adding New order in Database
         db.add(new_order)
         db.flush()
-        #8.Placing Cart Items in Order Items Table
-        order_items=[
+        #11.Placing Cart Items in Order Items Table
+        db.bulk_save_objects([
             Order_Item_Model(
                 order_id=new_order.id,
                 pizza_id=item.pizza_id,
@@ -85,15 +104,13 @@ def place_order_from_cart(db:Session=Depends(get_db),user:User=Depends(get_curre
                 size_name=item.size,
                 quantity=item.quantity,
                 unit_price=item.unit_price,
-                sub_total=item.unit_price * item.quantit
+                sub_total=item.unit_price * item.quantity
             )
             for item in cart_items
-        ]
-        db.add_all(order_items)
-
+        ])
+    # 11. Delete cart items in bulk instead of one by one
         for item in cart_items:
             db.delete(item)
-
         db.delete(user_cart)
         safe_commit(db)
 
@@ -107,8 +124,10 @@ def place_order_from_cart(db:Session=Depends(get_db),user:User=Depends(get_curre
             }
     except HTTPException:
         raise #lets Fast API handle this Endpoint
-    #10.Raise Error
-    except Exception:
+   
+    #12.Raise Error
+    except Exception as e:
+       logging.exception(f"Order placement failed for user {user.id}: {e}")
        raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Order could not be placed. Please try again.",

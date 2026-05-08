@@ -64,3 +64,4 @@ class UpdateAddressSchema(BaseModel):
     is_default: Optional[bool]              = Field(None, description="Set as default address")
 
     model_config = ConfigDict(from_attributes=True)
+
