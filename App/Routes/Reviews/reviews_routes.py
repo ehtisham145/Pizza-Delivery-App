@@ -4,7 +4,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from fastapi import Query
 
-from App.Utils.middleware import get_current_user,require_admin
+from App.Utils.middleware import get_current_user,require_admin,require_admin_or_staff
 from App.DataModels.Reviews.reviews_model import Review_Model
 from App.DataModels.Auth_Users.user_model import User
 from App.DataModels.Order.order_model import Order_Model
@@ -95,13 +95,20 @@ def submit_a_review(
 )
 def get_reviews_history(
     db:Session=Depends(get_db),
-    skip : int =``
+    skip : int = Query(ge=0,default=0),
+    limit : int = Query(ge=1,default=10,ls=100),
     user:User=Depends(get_current_user)
 ):
     #1.Fetching Reviews from Database
-    review_history=db.query(Review_Model).filter(
-        Review_Model.user_id==user.id).all()
-    return review_history
+    reviews=(db.query(Review_Model).filter(
+        Review_Model.user_id==user.id).order_by(Review_Model.created_at.desc()).offset(skip).limit(limit).all()
+    )
+
+    #2.Raise Error If no Reviews Found
+    if not reviews:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="No Reviews has been found your Account !")
+
+    return reviews
 
 
 
@@ -113,35 +120,41 @@ def get_reviews_history(
 )
 def get_all_reviews(
     db:Session=Depends(get_db),
+    skip: int =Query(default=0,ge=0),
+    limit: int =Query(default=10,ge=1,ls=100),
     user:User=Depends(require_admin)
 ):
     #1.Fetch Reviews from DB
-    all_reviews=db.query(Review_Model).all()
-    #2.Return Output
-    return all_reviews
+    reviews=(db.query(Review_Model).filter(
+      Review_Model.user_id==user.id  
+    ).order_by(Review_Model.created_at.desc()).offset(skip).limit(limit).all())
+    
+    #2.Raise Error if Reviews not found
+    if not reviews:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No reviews found in the system.",
+        )
+
+    #3.Return Output
+    return reviews
 
 #4.=====================Delete a Review (Admin)===============================
-@review_router.get(
+@review_router.delete(
     "/reviews/{review_id}",
     status_code=status.HTTP_200_OK
 )
 def delete_a_review(
     review_id:int,
     db:Session=Depends(get_db)
-    ,user:User=Depends(require_admin)
+    ,user:User=Depends(require_admin_or_staff)
 ):
-    #1.Fetch Review from DB
-    review_to_delete=db.query(Review_Model).filter(
-        Review_Model.id==review_id).first()
-    #2.Raise Error if no Review is found
-    if not review_to_delete:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-        detail="Review not found !")
-    #3.Delete Review
-    db.delete(review_to_delete)
-    db.commit()
-    #4.Return Output
-    return {"Message":"Review Deleted Successfully !"}
+    review = _get_review_or_404(review_id, db)
+ 
+    db.delete(review)
+    safe_commit(db)
+ 
+    return {"message": "Review deleted successfully."}
 
 #5.=====================Public Reviews for a pizza (pizza_id)========================
 @review_router.get(
@@ -151,11 +164,17 @@ def delete_a_review(
 )
 def get_review_for_pizza(
     pizza_id:int,
+    skip : int = Query (default=0,ge=0),
+    limit : int = Query (default=10,ge=1,le=100),
     db:Session=Depends(get_db)
 ): 
     #1.Fetching Review from DB
-    pizza_review=db.query(Review_Model).filter(Review_Model.pizza_id==pizza_id).all()
+    pizza_review=db.query(Review_Model).filter(
+        Review_Model.pizza_id==pizza_id
+        ).order_by(Review_Model.created_at.desc()).offset(skip).limit(limit).all()
+
     #2.Raise Error If Review not Found
     if not pizza_review:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Review Not Found !")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Review Not Found for this Pizza !")
+
     return pizza_review

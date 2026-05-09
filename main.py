@@ -33,8 +33,8 @@ app.include_router(cart_router,prefix="/cart",tags=["Cart"]) #--done
 app.include_router(order_router,prefix="/order",tags=["Order"]) #--done
 app.include_router(delivery_router,prefix="/delivery",tags=["Delivery"]) #--done
 app.include_router(payment_router,prefix="/payment",tags=["Payment"]) #--done
-app.include_router(review_router,prefix="/review",tags=["Reviews"])
-app.include_router(notification_router,prefix="/notifications",tags=["Notifications"])
+app.include_router(review_router,prefix="/review",tags=["Reviews"]) #-done
+app.include_router(notification_router,prefix="/notifications",tags=["Notifications"]) #--done
 app.include_router(admin_router,prefix="/admin",tags=["Admin"]) #--done
 
 #==================Running your Server======================

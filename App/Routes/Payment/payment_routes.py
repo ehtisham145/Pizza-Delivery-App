@@ -1,6 +1,7 @@
 from fastapi import Depends,HTTPException,APIRouter,status,Query
 from typing import List
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 
 from App.Database.database import get_db
 from App.Utils.middleware import get_current_user,require_admin
