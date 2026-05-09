@@ -26,16 +26,17 @@ class OrderResponseSchema(BaseModel):
     notes:       Optional[str]  = Field(None, description="Delivery notes")
     created_at:  datetime
     updated_at:  Optional[datetime] = None
-    order_items: List[OrderItemSchema] = []
+    order_item: List[OrderItemSchema]=[]
 
     model_config = ConfigDict(from_attributes=True)
+
 
 #3. ======================== Order Update Status Schema ========================    
 class OrderStatusUpdateSchema(BaseModel):
     new_status: OrderStatusEnum = Field(..., description="New status to apply to the order")
     @field_validator("new_status")
     def validate_status_transition(cls,v):
-        if v == OrderStatusEnum.pending:
+        if v == OrderStatusEnum.PENDING.value:
             raise ValueError("Cannot revert order status back to pending")
         return v
     model_config=ConfigDict(from_attributes=True)
@@ -45,10 +46,10 @@ class OrderStatusUpdateSchema(BaseModel):
 class OrderHistorySchema(BaseModel):
     """Schema for returning a user's full order history."""
 
-    user_id:   int    = Field(..., description="ID of the user")
+    id:   int    = Field(..., description="ID of the user")
     full_name: str    = Field(..., description="Full name of the user")
     email:     str    = Field(..., description="Email of the user")
-    orders:    List[OrderResponseSchema] = []
+    order:    List[OrderResponseSchema] = []
 
     model_config = ConfigDict(from_attributes=True)
 

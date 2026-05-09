@@ -1,12 +1,21 @@
-from fastapi import APIRouter,HTTPException,Depends,status
-from sqlalchemy.orm import Session,joinedload
+from fastapi import APIRouter,HTTPException,Depends,status,Query
+from sqlalchemy.orm import Session,joinedload,selectinload
 from datetime import datetime,timedelta,timezone
 from typing import List
+from typing import Optional
 import logging
 from fastapi import Form
+import logging
+
+logger = logging.getLogger(__name__)
 
 from App.Database.database import get_db
-from App.Utils.middleware import get_current_user,require_admin,get_user_or_404
+from App.Utils.middleware import (
+get_current_user,require_admin,
+get_user_or_404,
+require_admin_or_staff
+)
+
 from App.Utils.db_helper import safe_commit
 from App.DataModels.Auth_Users.user_model import User
 from App.DataModels.Order.order_model import Order_Model,Order_Item_Model
@@ -19,18 +28,25 @@ from App.Schemas.Order.order_schemas import (
  OrderStatusUpdateSchema,
  PlaceOrderSchema
 )
-from App.Schemas.Order.order_schemas import OrderHistorySchema
+from App.Schemas.Order.order_schemas import OrderHistorySchema,OrderStatusUpdateSchema
 from App.Utils.validator import validate_uuid
 from App.Utils.constant import OrderStatusEnum
-
+from App.Utils.db_helper import safe_commit
 
 #------------------------------Create Order Router--------------------------------
 order_router=APIRouter()
 
 #1)=================================Place Order From Cart===============================
 
-@order_router.post("/place_order_from_cart/user",status_code=status.HTTP_201_CREATED)
-def place_order_from_cart(payload:PlaceOrderSchema,db:Session=Depends(get_db),user:User=Depends(get_current_user)):
+@order_router.post(
+    "/place_order_from_cart/user"
+    ,status_code=status.HTTP_201_CREATED
+)
+def place_order_from_cart(
+    payload:PlaceOrderSchema,
+    db:Session=Depends(get_db),
+    user:User=Depends(get_current_user)
+):
     
     #1.Validate Address Belongs to User or Not
     address=db.query(Delivery_Model).filter(
@@ -90,7 +106,7 @@ def place_order_from_cart(payload:PlaceOrderSchema,db:Session=Depends(get_db),us
             address_id=payload.address_id,
             notes=payload.notes,
             total_price=total_amount,
-            created_at=datetime.utcnow()
+            created_at=datetime.now(timezone.utc)
         )
         #10.Adding New order in Database
         db.add(new_order)
@@ -134,118 +150,194 @@ def place_order_from_cart(payload:PlaceOrderSchema,db:Session=Depends(get_db),us
         )
 
 
-#2)============================Get Order By Order_ID==============================
-@order_router.get("/get_order_by_id/user/{order_id}",status_code=status.HTTP_200_OK,response_model=OrderResponseSchema)
-def get_order_by_id(order_id:str,db:Session=Depends(get_db),user:User=Depends(get_current_user)):
-    #2.Fetching user order
-    user_order=db.query(Order_Model).options(joinedload(Order_Model.order_item).joinedload(Order_Item_Model.pizza)).filter(
-        Order_Model.id==order_id,
-        Order_Model.user_id==user.id
+
+#2)============================Get Order By Order ID User==============================
+
+@order_router.get(
+    "/get_order_by_id/user/{order_id}"
+    ,status_code=status.HTTP_200_OK,
+    response_model=OrderResponseSchema
+)
+def get_order_by_id(
+    order_id:str,
+    db:Session=Depends(get_db),
+    user:User=Depends(get_current_user)
+):
+    #1.Fetching user order    
+    user_order=db.query(Order_Model).options(selectinload(Order_Model.order_item
+    ).selectinload(Order_Item_Model.pizza)).filter(
+         Order_Model.id == str(order_id),
+        Order_Model.user_id == user.id 
     ).first()
-    #Code in SQL 
-    #SELECT orders,order_items,pizza FROM orders 
-    # LEFT JOIN order.id==order_items.order_id 
-    # LEFT JOIN order_items.pizza_id WHERE order.id==valid_order_id AND order.user_id==user.id 
-    #Raise Error If user Order dont exists
+    
+    #2.Raise Error if order not found
     if not user_order:
-        print(user.id)
-        print(order_id)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Order not Found")
+   
     return user_order
+
 
 
 #3)=================================Get All Orders (Only Admin or Staff)==================================
-@order_router.get("/Get_all_Orders/Admin",status_code=status.HTTP_200_OK,response_model=List[OrderResponseSchema])
-def Get_all_Orders_admin(db:Session=Depends(get_db),user:User=Depends(require_admin)):
-    #1.Fetch Orders From Order Table
-    all_orders = db.query(Order_Model).options(
-        joinedload(Order_Model.order_item).joinedload(Order_Item_Model.pizza)
-    ).all()
-    #2.Raise Error if no record is found
-    if not all_orders:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="No order in Database")
 
-    #3.Return all Order
+@order_router.get(
+    "/get_all_orders/admin",
+    status_code=status.HTTP_200_OK,
+    response_model=List[OrderResponseSchema]
+)
+def get_all_orders_admin(
+    page: int = Query(default=1, ge=1, description="Page number"),
+    page_size: int = Query(default=20, ge=1, le=100, description="Results per page"),
+    order_status: Optional[str] = Query(default=None, description="Filter by order status"),
+    db: Session = Depends(get_db),
+    user: User = Depends(require_admin)           
+):
+    #1.Fetch Orders From Order Table
+    offset = (page - 1) * page_size 
+    query=db.query(Order_Model).options(selectinload(Order_Model.order_item)
+    .selectinload(Order_Item_Model.pizza))
+    #2.apply status If provided
+    if order_status:
+        query=query.filter(Order_Model.status == order_status)
+
+    #3.Fetching all Orders
+    all_orders = (
+        query
+        .order_by(Order_Model.created_at.desc())   # ✅ newest first — almost always what admin wants
+        .offset(offset)
+        .limit(page_size)
+        .all()
+    )
+
+    #4.Return all Order
     return all_orders
 
+
+
+
 #4)===========================Get Order by ID (Admin or Staff)==============================
-@order_router.get("/admin/get_orders/{order_id}",status_code=status.HTTP_200_OK,response_model=OrderResponseSchema)
-def admin_get_order(order_id:str,db:Session=Depends(get_db),user:User=Depends(get_current_user)):
-    allowed_roles=["admin","staff"] 
-    if user.role not in allowed_roles:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="Only Admin or Staff can Access All the Order Details !")
-    #2.Fetching user order
-    user_order=db.query(Order_Model).options(joinedload(Order_Model.order_item).joinedload(Order_Item_Model)).filter(
+
+@order_router.get(
+    "/admin/get_orders/{order_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=OrderResponseSchema
+)
+
+def admin_get_order(
+    order_id:str,
+    db:Session=Depends(get_db),
+    user:User=Depends(require_admin_or_staff)
+):
+    #1.Fetching user order
+    user_order=db.query(Order_Model).options(selectinload(Order_Model.order_item)
+    .selectinload(Order_Item_Model.pizza)
+    ).filter(
         Order_Model.id==order_id
     ).first()
-    #Code in SQL 
-    #SELECT orders,order_items,pizza FROM orders 
-    # LEFT JOIN order.id==order_items.order_id 
-    # LEFT JOIN order_items.pizza_id WHERE order.id==valid_order_id AND order.user_id==user.id 
-    #Raise Error If user Order dont exists
-    if not user_order:
-        print(user.id)
-        print(order_id)
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Order not Found")
     return user_order
 
 
+
+
 #5)=========================Update Order Status(Admin or Staff)================
-@order_router.patch("/Update_Order_Status/Admin/{order_id}",status_code=status.HTTP_200_OK,response_model=OrderResponseSchema)
-def Update_Order_Status(order_id:str,new_status: OrderStatusEnum,db:Session=Depends(get_db),user:User=Depends(get_current_user)):
-    #2.Check the Role
-    allowed_roles=["admin","staff"]
-    if user.role not in allowed_roles:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,detail="Only Admin or Staff can Access All the Order Details !")
-    
-    #3.Fetch Order from db
-    db_order=db.query(Order_Model).filter(Order_Model.id==order_id).first()
 
-    #4.Raise Error If order not found
+@order_router.patch(
+    "/update_order_status/admin/{order_id}"
+    ,status_code=status.HTTP_200_OK,
+    response_model=OrderResponseSchema
+)
+def update_order_status(
+    order_id:str,
+    payload: OrderStatusUpdateSchema,
+    db:Session=Depends(get_db),
+    user:User=Depends(require_admin_or_staff)
+):
+    #1.Fetch Order from db
+    db_order=db.query(Order_Model).filter(Order_Model.id==str(order_id)).first()
+
+    #2.Raise Error If order not found
     if not db_order:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="No Order is Found against this ID !")
-   # 5. Logical Constraint
-    if db_order.status == "Delivered":
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot update a delivered order!")
-
-    # 6. Final Update (Only if status is different)
-    if db_order.status != new_status:
-        db_order.status = new_status.value
-        db.commit()
-        db.refresh(db_order)
-    
-    return db_order
-    
-#6)=======================Cancel Order If pending===========================
-@order_router.patch("/Cancel_Order/User/{order_id}",status_code=status.HTTP_200_OK,response_model=OrderResponseSchema)
-def Cancel_Order(order_id:str,db:Session=Depends(get_db),user:User=Depends(get_current_user)):
-    #2.Query for Order
-    user_order=db.query(Order_Model).filter(Order_Model.id==order_id).first()
-    #3.Raise Error
-    if not user_order:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Order Not Found")
-    #4. Check Status
-    if user_order.status.upper() == "PENDING":
-        #5.Updating Status
-        user_order.status="CANCELLED"
-        db.commit()
-        db.commit()
-        db.refresh(user_order)
-        return user_order
-    else:
-       raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, 
-            detail=f"Order cannot be cancelled because its current status is {user_order.status}"
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+        detail=f"Order with ID {order_id} not Found!"
+)
+   
+   #3. Logical Constraint
+    if db_order.status == OrderStatusEnum.DELIVERED.value:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot update a delivered order — it is already in a terminal state"
         )
+    
+
+    #5.Updating Status
+    db_order.status=payload.new_status.value
+    safe_commit(db)
+
+    return db_order
+
+
+
+#6)=======================Cancel Order If pending===========================
+
+@order_router.patch(
+    "/cancel_Order/User/{order_id}"
+    ,status_code=status.HTTP_200_OK,
+    response_model=OrderResponseSchema
+)
+def cancel_order(
+    order_id:str,
+    db:Session=Depends(get_db)
+    ,user:User=Depends(get_current_user)
+):
+    #1.Query for Order
+    user_order=db.query(Order_Model).filter(
+        Order_Model.id==order_id).first()
+    
+    #2.Raise Error
+    if not user_order:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+        detail=f"Order with ID {order_id} Not Found")
+
+    #3.Any Other User cannot Cancel any other Order
+    if user_order.user_id != user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+            detail="You are not authorized to cancel this order"
+        )
+
+    #4. Check Status
+    if user_order.status!= OrderStatusEnum.PENDING.value:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Order cannot be cancelled because its current status is '{user_order.status}'"
+        )
+    
+    #5.Updating Status
+    user_order.status=OrderStatusEnum.CANCELLED.value
+    safe_commit(db)
+    db.refresh(user_order)
+    return user_order
+
+
 #7)========================Track_Order_History/User===============================
-@order_router.get("/Get_Orders_History/User",status_code=status.HTTP_200_OK,response_model=OrderHistorySchema)
-def Get_Orders_History(db:Session=Depends(get_db),user:User=Depends(get_current_user)):
-    user_orders=db.query(User).options(joinedload(User.order).joinedload(Order_Model.order_item)).filter(
+
+@order_router.get(
+    "/get_orders_history/user",
+    status_code=status.HTTP_200_OK,
+    response_model=OrderHistorySchema
+)
+def get_orders_history(
+    db:Session=Depends(get_db),
+    user:User=Depends(get_current_user)
+):
+    #1.Fetching User Order
+    user_orders=db.query(User).options(selectinload(User.order).selectinload
+    (Order_Model.order_item)).filter(
     User.id==user.id
     ).first()
-    #4.Raise Error if Order not found
+
+    #2.Return Order
     if not user_orders:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Orders not found for this user in database !")
+        return []
         
     return user_orders
 

@@ -16,8 +16,14 @@ cart_router=APIRouter()
 
 #1. ======================Customer	Get my cart with all items + total============
 
-@cart_router.get("/get_your_cart", response_model=List[CartResponseSchema])
-def get_cart(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+@cart_router.get(
+    "/get_your_cart", 
+    response_model=List[CartResponseSchema]
+)
+def get_cart(
+    db: Session = Depends(get_db),
+     user: User = Depends(get_current_user)
+):
     
     """Fetch the user's cart or raise 404."""
     
@@ -32,8 +38,15 @@ def get_cart(db: Session = Depends(get_db), user: User = Depends(get_current_use
 
 #2.====================Update Cart Item Quantity (Customer)=================================
 
-@cart_router.patch("/Update_cart_Item_quantity", status_code=status.HTTP_200_OK)
-def Update_cart_Item_quantity(quantity: int, item_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+@cart_router.patch(
+    "/update_cart_Item_quantity", 
+    status_code=status.HTTP_200_OK
+)
+def update_cart_Item_quantity(
+    quantity: int, item_id: int,
+     db: Session = Depends(get_db),
+      user: User = Depends(get_current_user)
+):
     
     """Update Your Cart Item Quantity"""
     
@@ -63,10 +76,16 @@ def Update_cart_Item_quantity(quantity: int, item_id: int, db: Session = Depends
     return db_item
 
 
-#=================Delete Customer Clear entire cart======================================
+#3.=================Delete Customer Clear entire cart======================================
 
-@cart_router.delete("/Delete_Entire_Cart",status_code=status.HTTP_200_OK)
-def delete_entire_cart(db:Session=Depends(get_db),user:User=Depends(get_current_user)):
+@cart_router.delete(
+    "/delete_entire_cart",
+    status_code=status.HTTP_200_OK
+)
+def delete_entire_cart(
+    db:Session=Depends(get_db),
+    user:User=Depends(get_current_user)
+):
     
     """This Function will Delete Entire Cart"""
 
@@ -85,9 +104,18 @@ def delete_entire_cart(db:Session=Depends(get_db),user:User=Depends(get_current_
    
     return {"message": "Your cart has been cleared successfully."}
 
-#==================Remove one item From Cart===============================================
-@cart_router.delete("/Delete_Cart_Item/{item_id}",status_code=status.HTTP_200_OK)
-def delete_cart_item(item_id:int,db:Session=Depends(get_db),user:User=Depends(get_current_user)):
+
+#4.==================Remove one item From Cart===============================================
+@cart_router.delete(
+    "/delete_cart_item/{item_id}"
+    ,status_code=status.HTTP_200_OK
+)
+
+def delete_cart_item(
+    item_id:int,
+    db:Session=Depends(get_db),
+    user:User=Depends(get_current_user)
+):
     
     """This function will delete your Cart Item Present in Cart """
     
@@ -111,8 +139,12 @@ def delete_cart_item(item_id:int,db:Session=Depends(get_db),user:User=Depends(ge
 
 
 
-#================Add item to cart=========================================================
-@cart_router.post("/add_item_to_cart/{item_id}", status_code=status.HTTP_201_CREATED)
+#5.================Add item to cart=========================================================
+@cart_router.post(
+    "/add_item_to_cart/{item_id}",
+    status_code=status.HTTP_201_CREATED
+)
+
 def add_item_to_cart(
     item_id: int, 
     item_data: AddToCartSchema, 

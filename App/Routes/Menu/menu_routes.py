@@ -25,8 +25,16 @@ menu_router=APIRouter()
 
 
 #1.=====================Create Pizza (Admin)===================
-@menu_router.post("/Create_Pizza",status_code=status.HTTP_201_CREATED,response_model=Pizza_Response)
-def create_pizza(pizza:Pizza_Request,db:Session=Depends(get_db),user:User=Depends(require_admin)):
+@menu_router.post(
+    "/create_pizza",
+    status_code=status.HTTP_201_CREATED,
+    response_model=Pizza_Response
+)
+def create_pizza(
+    pizza:Pizza_Request,
+    db:Session=Depends(get_db),
+    user:User=Depends(require_admin)
+):
     #1.
     if db.query(Pizza_Model).filter(Pizza_Model.name == pizza.name).first():
         raise HTTPException(
@@ -49,25 +57,50 @@ def create_pizza(pizza:Pizza_Request,db:Session=Depends(get_db),user:User=Depend
     return new_pizza
 
 #2.=====================Getting All Pizzas===================
-@menu_router.get("/Get_all_pizzas",status_code=status.HTTP_200_OK,response_model=List[Pizza_Response])
-def Get_all_pizza(db:Session=Depends(get_db),user:User=Depends(get_current_user)):
+@menu_router.get(
+    "/get_all_pizzas",
+    status_code=status.HTTP_200_OK,
+    response_model=List[Pizza_Response]
+)
+def get_all_pizza(
+    db:Session=Depends(get_db),
+    user:User=Depends(get_current_user)
+):
         pizzas=db.query(Pizza_Model).all()
         if not pizzas:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="No Pizza is added in Database yet")
         #Show only Availble Pizzas
         return pizzas
 
-#=====================Getting a Pizza Bt Id===================
-@menu_router.get("/Pizza_by_id/{pizza_id}",status_code=status.HTTP_200_OK,response_model=Pizza_Response)
-def Pizza_by_id(pizza_id:int,db:Session=Depends(get_db),user:User=Depends(get_current_user)):
+
+#3.=====================Getting a Pizza Bt Id===================
+@menu_router.get(
+    "/pizza_by_id/{pizza_id}"
+    ,status_code=status.HTTP_200_OK,
+    response_model=Pizza_Response)
+def pizza_by_id(
+    pizza_id:int,
+    db:Session=Depends(get_db),
+    user:User=Depends(get_current_user)
+):
         pizza=db.query(Pizza_Model).filter(Pizza_Model.id==pizza_id).first()
         if not pizza:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail=f"Pizza with ID {pizza_id} is not found in database")
         return pizza
 
-#=====================Upate a Pizza (Admin)===================
-@menu_router.put("/Update_Pizza/{pizza_id}",status_code=status.HTTP_200_OK)
-def Update_Pizza(pizza:Pizza_Request,pizza_id:int,db:Session=Depends(get_db),user:User=Depends(require_admin)):
+
+
+#4.=====================Upate a Pizza (Admin)===================
+@menu_router.put(
+    "/update_pizza/{pizza_id}",
+    status_code=status.HTTP_200_OK
+)
+def update_pizza(
+    pizza:Pizza_Request,
+    pizza_id:int,
+    db:Session=Depends(get_db)
+    ,user:User=Depends(require_admin)
+):
     #1.Searching Pizza in DataBase
     db_pizza=db.query(Pizza_Model).filter(Pizza_Model.id==pizza_id).first()
     
@@ -90,13 +123,25 @@ def Update_Pizza(pizza:Pizza_Request,pizza_id:int,db:Session=Depends(get_db),use
     return db_pizza
 
 
-#=====================Update Pizza Status (Admin or Staff)===================
-@menu_router.patch("/Update_Pizza_Status/{pizza_id:int}",status_code=status.HTTP_200_OK)
-def Update_Pizza_Status(pizza_data:Update_Pizza_Status,pizza_id:int,db:Session=Depends(get_db),user:User=Depends(require_admin_or_staff)):
+#5.=====================Update Pizza Status (Admin or Staff)===================
+
+@menu_router.patch(
+    "/update_pizza_status/{pizza_id:int}"
+    ,status_code=status.HTTP_200_OK
+)
+def update_pizza_status(
+    pizza_data:Update_Pizza_Status,
+    pizza_id:int,
+    db:Session=Depends(get_db),
+    user:User=Depends(require_admin_or_staff)
+):
+
     db_pizza=db.query(Pizza_Model).filter(Pizza_Model.id==pizza_id).first()
     #1.If Pizza not found
+
     if not db_pizza:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail=f"Pizza with ID {pizza_id}is not found in data base !")
+
     #2.Update Pizza Status
     db_pizza.is_available=pizza_data.is_available
 
@@ -108,8 +153,11 @@ def Update_Pizza_Status(pizza_data:Update_Pizza_Status,pizza_id:int,db:Session=D
     return db_pizza
 
 
-#===================== Delete Pizza (Admin/Staff Only) ===================
-@menu_router.delete("/pizzas/{pizza_id}", status_code=status.HTTP_200_OK)
+#6.===================== Delete Pizza (Admin/Staff Only) ===================
+@menu_router.delete(
+    "/pizzas/{pizza_id}",
+     status_code=status.HTTP_200_OK
+)
 def delete_pizza(pizza_id: int, db: Session = Depends(get_db), user: User = Depends(require_admin_or_staff)):
     # 1. Database Lookup: Fetch the specific pizza record
     pizza = db.query(Pizza_Model).filter(Pizza_Model.id == pizza_id).first()
@@ -134,9 +182,18 @@ def delete_pizza(pizza_id: int, db: Session = Depends(get_db), user: User = Depe
 
 #-------------------------------Categories----------------------------
 
-#==================Create Categories in Datavase (Admin)===========================
-@menu_router.post("/Create_Category",status_code=status.HTTP_201_CREATED,response_model=Category_Response)
-def Create_Category(name:PizzaCategoryEnum= Body(...),description: str=Body(...),db:Session=Depends(get_db),user:User=Depends(require_admin)):    
+#7.==================Create Categories in Datavase (Admin)===========================
+@menu_router.post(
+    "/create_category",
+    status_code=status.HTTP_201_CREATED,
+    response_model=Category_Response
+)
+def create_category(
+    name:PizzaCategoryEnum= Body(...),
+    description: str=Body(...),
+    db:Session=Depends(get_db),
+    user:User=Depends(require_admin)
+):    
     #1.Create Categories
     new_category=Category_Model(
             name=name,
@@ -149,9 +206,15 @@ def Create_Category(name:PizzaCategoryEnum= Body(...),description: str=Body(...)
     return new_category
 
 
-#=================List All Categories in DataBase===========================
-@menu_router.get("/View_Categories",status_code=status.HTTP_200_OK)
-def View_Categories(db:Session=Depends(get_db),user:User=Depends(get_current_user)):
+#8.=================List All Categories in DataBase===========================
+@menu_router.get("/view_categories",
+status_code=status.HTTP_200_OK
+)
+def view_categories(
+    db:Session=Depends(get_db),
+    user:User=Depends(get_current_user)
+):
+
     categories=db.query(Category_Model).all()
     #.All function return you an empty list in database 
     if not categories:
@@ -168,8 +231,15 @@ def View_Categories(db:Session=Depends(get_db),user:User=Depends(get_current_use
 
 
 #=============Create Toppings(only for Admin)==============================
-@menu_router.post("/Create_Toppings",status_code=status.HTTP_201_CREATED,response_model=Topping_Response)
-def create_topping(topping_data:Topping_Request,db:Session=Depends(get_db),user:User=Depends(require_admin)):
+@menu_router.post("/create_toppings",
+    status_code=status.HTTP_201_CREATED,
+    response_model=Topping_Response
+)
+def create_topping(
+    topping_data:Topping_Request,
+    db:Session=Depends(get_db),
+    user:User=Depends(require_admin)
+):
     # 1.Check Uniqueness
     if db.query(Topping_Model).filter(Topping_Model.name == topping_data.name).first():
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Topping already exists.")
@@ -187,9 +257,18 @@ def create_topping(topping_data:Topping_Request,db:Session=Depends(get_db),user:
         
     return new_topping
 
-#=============List All Topping==============================
-@menu_router.get("/All_Toppings",status_code=status.HTTP_200_OK,response_model=List[Topping_Response])
-def get_all_toppings(db:Session=Depends(get_db),user:User=Depends(get_current_user)):
+#9.=============List All Topping==============================
+@menu_router.get(
+    "/all_toppings",
+    status_code=status.HTTP_200_OK,
+    response_model=List[Topping_Response]
+)
+
+def get_all_toppings(
+    db:Session=Depends(get_db),
+    user:User=Depends(get_current_user)
+):
+
     #1. Accessing all topping in database
     toppings=db.query(Topping_Model).all()
     #2.Check whether Toppings are present or not
@@ -198,9 +277,15 @@ def get_all_toppings(db:Session=Depends(get_db),user:User=Depends(get_current_us
     #.3 Show all toppings
     return toppings
 
-#=============Update Topping Only Admin==============================
-@menu_router.put("/Update_Topping/{topping_id}")
-def Update_Topping(topping_data:Topping_Request,topping_id:int,db:Session=Depends(get_db),user:User=Depends(require_admin_or_staff)):
+#10.=============Update Topping Only Admin==============================
+
+@menu_router.put("/update_topping/{topping_id}")
+def update_Topping(
+    topping_data:Topping_Request,
+    topping_id:int,db:Session=Depends(get_db),
+    user:User=Depends(require_admin_or_staff)
+):
+
     #1.Search Topping Id
     db_topping=db.query(Topping_Model).filter(Topping_Model.id==topping_id).first()
     #2.Raise Error if id not found

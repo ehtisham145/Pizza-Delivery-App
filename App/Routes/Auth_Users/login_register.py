@@ -59,7 +59,10 @@ auth_router = APIRouter()
     response_model=UserResponseSchema,
     summary="Register a new user",
 )
-def register_user(user: UserRegisterSchema, db: Session = Depends(get_db)):
+def register_user(
+    user: UserRegisterSchema,
+     db: Session = Depends(get_db)
+):
     """
     Handles new user registration: checks for existing email,
     hashes password, and persists user to the database.
@@ -230,11 +233,15 @@ def logout(
 # 4. REFRESH TOKEN
 # ================================================================== #
 @auth_router.post("/refresh-token", status_code=status.HTTP_200_OK)
-def refresh_access_token(payload: RefreshTokenRequest, db: Session = Depends(get_db)):
+def refresh_access_token(
+    payload: RefreshTokenRequest,
+    db: Session = Depends(get_db)
+):
     # 1. Verify JWT signature + expiry
     decoded_data = verify_refresh_token(payload.refresh_token)
     if not decoded_data:
-        raise HTTPException(status_code=401, detail="Invalid or expired refresh token")
+        raise HTTPException(status_code=401, 
+        detail="Invalid or expired refresh token")
 
     username = decoded_data.get("sub")
 
@@ -247,7 +254,8 @@ def refresh_access_token(payload: RefreshTokenRequest, db: Session = Depends(get
 
     # FIX #3 ✅ — Also reject tokens that are flagged as revoked.
     if not db_token or db_token.is_revoked:
-        raise HTTPException(status_code=401, detail="Token revoked or already used")
+        raise HTTPException(status_code=401, 
+        detail="Token revoked or already used")
 
     # 3. Generate a fresh token pair
     token_data  = {"sub": username}
@@ -272,7 +280,8 @@ def refresh_access_token(payload: RefreshTokenRequest, db: Session = Depends(get
     except Exception as e:
         db.rollback()
         logger.error(f"Failed to rotate refresh token: {e}")
-        raise HTTPException(status_code=500, detail="Could not update security tokens")
+        raise HTTPException(status_code=500, 
+        detail="Could not update security tokens")
 
     return {
         "access_token": new_access,

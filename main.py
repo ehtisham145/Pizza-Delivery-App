@@ -30,9 +30,9 @@ app.include_router(auth_router,prefix='/auth',tags=['Authentication']) #--done
 app.include_router(profile_router,prefix="/profile",tags=["Profile"])  #--done
 app.include_router(menu_router,prefix="/menu",tags=["Menu Management"]) #--done
 app.include_router(cart_router,prefix="/cart",tags=["Cart"]) #--done
-app.include_router(order_router,prefix="/order",tags=["Order"])
-app.include_router(delivery_router,prefix="/delivery",tags=["Delivery"])
-app.include_router(payment_router,prefix="/payment",tags=["Payment"])
+app.include_router(order_router,prefix="/order",tags=["Order"]) #--done
+app.include_router(delivery_router,prefix="/delivery",tags=["Delivery"]) #--done
+app.include_router(payment_router,prefix="/payment",tags=["Payment"]) #--done
 app.include_router(review_router,prefix="/review",tags=["Reviews"])
 app.include_router(notification_router,prefix="/notifications",tags=["Notifications"])
 app.include_router(admin_router,prefix="/admin",tags=["Admin"]) #--done

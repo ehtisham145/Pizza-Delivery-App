@@ -37,7 +37,11 @@ def get_profile(current_user:User=Depends(get_current_user)):
     "/update-profile",
     status_code=status.HTTP_200_OK
     )
-def Update_Profile(update_data:UserUpdateSchema,current_user:User=Depends(get_current_user),db:Session=Depends(get_db)):
+def update_Profile(
+    update_data:UserUpdateSchema,
+    current_user:User=Depends(get_current_user),
+    db:Session=Depends(get_db)
+):
     """
     Updates mutable profile fields (full_name, phone_number).
     Only fields explicitly provided in the request body are changed.
