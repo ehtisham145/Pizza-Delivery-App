@@ -1,9 +1,12 @@
 from App.Database.database import get_db
 from fastapi import Depends,APIRouter,HTTPException,status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
+from fastapi import Query
 
 from App.Utils.middleware import get_current_user,require_admin
 from App.DataModels.Reviews.reviews_model import Review_Model
+from App.DataModels.Auth_Users.user_model import User
 from App.DataModels.Order.order_model import Order_Model
 from App.Schemas.Reviews.review_schemas import ( 
     ReviewCreateSchema,ReviewResponseSchema
@@ -12,6 +15,19 @@ from typing import List
 
 #Create Review Router
 review_router=APIRouter()
+
+# ─────────────────────────────────────────────
+# Helper: reusable review fetcher
+# ─────────────────────────────────────────────
+
+def _get_review_or_404(review_id: int, db: Session) -> Review_Model:
+    review = db.query(Review_Model).filter(Review_Model.id == review_id).first()
+    if not review:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Review with id '{review_id}' not found.",
+        )
+    return review
 
 #1.=====================Submit a Review (User)===============================
 @review_router.post(
@@ -26,24 +42,28 @@ def submit_a_review(
 ):
     
     # 1. Check if order exists
-    valid_order = db.query(Order_Model).filter(
+    order =(db.query(Order_Model).filter(
         Order_Model.id == rev.order_id).first()
-    
-    if not valid_order:
+    )
+
+    #2.Raise Error 
+
+    if not order:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, 
-        detail="Order not found!")
+        detail="Order not found or does not belong to your account ! ")
 
-    # 2. Check if order belongs to current user
-    if valid_order.user_id != user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-         detail="This order does not belong to you!")
+    
+    # # 3. Check if order belongs to current user
+    # if order.user_id != user.id:
+    #     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+    #      detail="This order does not belong to you!")
 
-    # 3. Check if review already exists for this order
-    existing_review = db.query(Review_Model).filter(
-        Review_Model.order_id == rev.order_id).first()
-    if existing_review:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-         detail="Review already exists for this order!")
+    # # 4. Check if review already exists for this order
+    # existing_review = db.query(Review_Model).filter(
+    #     Review_Model.order_id == rev.order_id).first()
+    # if existing_review:
+    #     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+    #      detail="Review already exists for this order!")
 
     # 4. Create and save review
     new_review = Review_Model(
@@ -52,10 +72,19 @@ def submit_a_review(
         comment=rev.comment,
         user_id=user.id
     )
-    db.add(new_review)
-    db.commit()
-    db.refresh(new_review)
+    try:
+        db.add(new_review)
+        safe_commit(db)
+        db.refresh(new_review)
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="You have already submitted a review for this order.",
+        )
+ 
     return new_review
+
 
 
 #2.=====================(Review History)/Customer===============================
@@ -66,6 +95,7 @@ def submit_a_review(
 )
 def get_reviews_history(
     db:Session=Depends(get_db),
+    skip : int =``
     user:User=Depends(get_current_user)
 ):
     #1.Fetching Reviews from Database
