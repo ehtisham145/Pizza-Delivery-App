@@ -1,5 +1,6 @@
 import re
 from uuid import UUID
+from fastapi import HTTPException,status
 #---------------Validate your Password----------------------
 def validate_password_strength(v: str) -> str:
     # 1. Explicit Length Check
