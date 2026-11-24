@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🍕 Pizza Delivery API
+#  Pizza Delivery API
 
 **A production-ready REST API for a complete Pizza Delivery platform**  
 Built with FastAPI · SQLAlchemy · JWT Authentication · Role-Based Access Control
@@ -23,45 +23,45 @@ Pizza Delivery API is a fully-featured backend system for managing an end-to-end
 
 ---
 
-## ✨ Features
+##  Features
 
-### 🔐 Authentication & Security
+###  Authentication & Security
 - **JWT Dual-Token System** — Short-lived Access Tokens + long-lived Refresh Tokens
 - **BCrypt Password Hashing** — Secure password storage via Passlib
 - **OAuth2 Password Flow** — Industry-standard authentication
 - **RBAC** — Role-Based Access Control (Admin vs Customer)
 - **IDOR Protection** — All resources validated against the authenticated user
 
-### 👤 User Management
+###  User Management
 - Secure registration & login
 - Profile update (username, email, phone)
 - Password change with current password verification
 - Token refresh without re-login
 
-### 🍕 Pizza Catalog
+###  Pizza Catalog
 - Browse available pizzas with details & pricing
 - Admin: add, update, and remove pizzas
 - Category and availability management
 
-### 📦 Order Management
+###  Order Management
 - Place orders with multiple pizzas
 - Real-time order status tracking
 - Order history with pagination
 - Admin: view and update all orders
 
-### 💳 Payment System
+###  Payment System
 - Create payment linked to an order
 - Race-condition-safe duplicate payment prevention
 - Admin: update payment status
 - Full payment history per user
 
-### ⭐ Reviews
+###  Reviews
 - Submit one review per delivered order
 - Public pizza reviews (by pizza ID)
 - Admin: moderate and delete reviews
 - Ownership-enforced review access
 
-### 🔔 Notifications
+###  Notifications
 - Real-time notification delivery per user
 - Mark single or all notifications as read
 - Unread count badge support
@@ -69,7 +69,7 @@ Pizza Delivery API is a fully-featured backend system for managing an end-to-end
 
 ---
 
-## 🛠 Tech Stack
+##  Tech Stack
 
 | Layer | Technology |
 |---|---|
@@ -83,7 +83,7 @@ Pizza Delivery API is a fully-featured backend system for managing an end-to-end
 
 ---
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### Prerequisites
 - Python 3.11+
@@ -119,7 +119,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES=30
 REFRESH_TOKEN_EXPIRE_DAYS=7
 ```
 
-> ⚠️ **Never commit your `.env` file.** It is already listed in `.gitignore`.
+>  **Never commit your `.env` file.** It is already listed in `.gitignore`.
 
 ### 5. Start the development server
 ```bash
@@ -131,9 +131,9 @@ Interactive docs at `http://127.0.0.1:8000/docs`
 
 ---
 
-## 📡 API Reference
+##  API Reference
 
-### 🔐 Auth Endpoints
+###  Auth Endpoints
 
 | Method | Endpoint | Description | Access |
 |---|---|---|---|
@@ -141,7 +141,7 @@ Interactive docs at `http://127.0.0.1:8000/docs`
 | `POST` | `/auth/login` | Login and get tokens | Public |
 | `POST` | `/auth/refresh` | Refresh access token | Public |
 
-### 👤 User Endpoints
+###  User Endpoints
 
 | Method | Endpoint | Description | Access |
 |---|---|---|---|
@@ -150,7 +150,7 @@ Interactive docs at `http://127.0.0.1:8000/docs`
 | `PATCH` | `/user/password` | Change password | Customer |
 | `PATCH` | `/user/phone` | Update phone number | Customer |
 
-### 🍕 Pizza Endpoints
+###  Pizza Endpoints
 
 | Method | Endpoint | Description | Access |
 |---|---|---|---|
@@ -160,7 +160,7 @@ Interactive docs at `http://127.0.0.1:8000/docs`
 | `PATCH` | `/pizzas/{pizza_id}` | Update pizza info | Admin |
 | `DELETE` | `/pizzas/{pizza_id}` | Remove a pizza | Admin |
 
-### 📦 Order Endpoints
+###  Order Endpoints
 
 | Method | Endpoint | Description | Access |
 |---|---|---|---|
@@ -170,7 +170,7 @@ Interactive docs at `http://127.0.0.1:8000/docs`
 | `GET` | `/orders/admin/all` | Get all orders | Admin |
 | `PATCH` | `/orders/{order_id}/status` | Update order status | Admin |
 
-### 💳 Payment Endpoints
+###  Payment Endpoints
 
 | Method | Endpoint | Description | Access |
 |---|---|---|---|
@@ -180,7 +180,7 @@ Interactive docs at `http://127.0.0.1:8000/docs`
 | `GET` | `/payments/admin/all` | Get all payments | Admin |
 | `PATCH` | `/payments/{payment_id}/status` | Update payment status | Admin |
 
-### ⭐ Review Endpoints
+###  Review Endpoints
 
 | Method | Endpoint | Description | Access |
 |---|---|---|---|
@@ -190,7 +190,7 @@ Interactive docs at `http://127.0.0.1:8000/docs`
 | `GET` | `/reviews/admin/all` | Get all reviews | Admin |
 | `DELETE` | `/reviews/{review_id}` | Delete a review | Admin |
 
-### 🔔 Notification Endpoints
+###  Notification Endpoints
 
 | Method | Endpoint | Description | Access |
 |---|---|---|---|
@@ -201,7 +201,7 @@ Interactive docs at `http://127.0.0.1:8000/docs`
 
 ---
 
-## 🗂 Project Structure
+##  Project Structure
 
 ```
 Pizza-Delivery-App/
@@ -247,7 +247,7 @@ Pizza-Delivery-App/
 
 ---
 
-## 🔒 Security Design
+##  Security Design
 
 - All protected routes require a valid `Bearer` token in the `Authorization` header
 - Ownership is verified at the database level — users can only access their own resources
@@ -257,7 +257,7 @@ Pizza-Delivery-App/
 
 ---
 
-## 📄 License
+##  License
 
 This project is licensed under the [MIT License](LICENSE).
 
