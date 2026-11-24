@@ -17,7 +17,7 @@ Built with FastAPI · SQLAlchemy · JWT Authentication · Role-Based Access Cont
 
 ---
 
-## 📌 Overview
+## Overview
 
 Pizza Delivery API is a fully-featured backend system for managing an end-to-end pizza delivery service. It covers everything from secure user authentication to order management, payments, reviews, and real-time notifications — all designed with clean architecture and production best practices.
 
