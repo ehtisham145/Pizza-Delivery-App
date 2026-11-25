@@ -1,0 +1,43 @@
+from app.database.init_db import create_tables
+from app.routes.Auth_Users.login_register import auth_router
+from app.routes.Auth_Users.profile import profile_router
+from app.routes.Menu.menu_routes import menu_router
+from app.routes.Cart.cart_routes import cart_router
+from app.routes.Order.order_routes import order_router
+from app.routes.Delivery.delivery_routes import delivery_router
+from app.routes.Payment.payment_routes import payment_router
+from app.routes.Reviews.reviews_routes import review_router
+from app.routes.Admin.admin_routes import admin_router
+from app.routes.Notification.notification_routes import notification_router
+from fastapi import FastAPI
+
+from app.utils.exception_handler import add_exception_handlers
+import uvicorn
+
+#=====================Creating App===================
+app=FastAPI()
+
+#===============Running Data base Tables==============
+create_tables()
+
+#================Error Handling in main.py==================
+
+add_exception_handlers(app)
+
+#================Including Router in main.py===============    
+
+app.include_router(auth_router,prefix='/auth',tags=['Authentication']) #--done
+app.include_router(profile_router,prefix="/profile",tags=["Profile"])  #--done
+app.include_router(menu_router,prefix="/menu",tags=["Menu Management"]) #--done
+app.include_router(cart_router,prefix="/cart",tags=["Cart"]) #--done
+app.include_router(order_router,prefix="/order",tags=["Order"]) #--done
+app.include_router(delivery_router,prefix="/delivery",tags=["Delivery"]) #--done
+app.include_router(payment_router,prefix="/payment",tags=["Payment"]) #--done
+app.include_router(review_router,prefix="/review",tags=["Reviews"]) #-done
+app.include_router(notification_router,prefix="/notifications",tags=["Notifications"]) #--done
+app.include_router(admin_router,prefix="/admin",tags=["Admin"]) #--done
+
+#==================Running your Server======================
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="127.0.0.1", port=8002, reload=True)
+

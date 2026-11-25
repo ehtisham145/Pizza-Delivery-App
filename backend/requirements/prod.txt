@@ -1,0 +1,9 @@
+# Staging / production: base + production server and PostgreSQL driver.
+# Install: pip install -r requirements/prod.txt
+-r base.txt
+
+# ── Production server ───────────────────
+uvicorn[standard]>=0.42.0       # uvloop + httptools for faster I/O
+
+# ── Database driver (PostgreSQL) ────────
+psycopg2-binary>=2.9.11
