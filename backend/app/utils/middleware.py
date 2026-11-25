@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime,timedelta,timezone
 from typing import Optional
 import os
+import uuid
 
 from app.database.database import get_db
 from app.datamodels.Auth_Users.user_model import User
@@ -51,7 +52,8 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     expire = datetime.now(timezone.utc) + (
         expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     )
-    payload = {**data, "exp": expire, "type": "access"}  # ← type claim added
+    # jti makes every token unique, even two issued in the same second
+    payload = {**data, "exp": expire, "type": "access", "jti": uuid.uuid4().hex}
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
 #------------- Create Refresh Token (Used for Long Term)-----------------------
@@ -61,7 +63,7 @@ def create_refresh_token(data: dict, expires_delta: Optional[timedelta] = None) 
     expire = datetime.now(timezone.utc) + (
         expires_delta or timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
     )
-    payload = {**data, "exp": expire, "type": "refresh"}  # ← type claim added
+    payload = {**data, "exp": expire, "type": "refresh", "jti": uuid.uuid4().hex}
     return jwt.encode(payload, REFRESH_SECRET_KEY, algorithm=ALGORITHM)
 
 

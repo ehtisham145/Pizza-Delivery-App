@@ -21,10 +21,12 @@ export function getSession() {
   }
 }
 
-export function setSession(session) {
+// `notify: false` stores the session without telling the app yet — used during
+// login so the UI doesn't treat the user as logged in before their role is known.
+export function setSession(session, { notify = true } = {}) {
   if (session) localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
   else localStorage.removeItem(STORAGE_KEY);
-  window.dispatchEvent(new Event("auth:changed"));
+  if (notify) window.dispatchEvent(new Event("auth:changed"));
 }
 
 // ── Error formatting (FastAPI returns `detail` as string or list) ─
@@ -35,7 +37,8 @@ function errorMessage(data, status) {
     return detail
       .map((d) => {
         const field = Array.isArray(d.loc) ? d.loc.filter((l) => l !== "body").join(".") : "";
-        return field ? `${field}: ${d.msg}` : d.msg;
+        const msg = String(d.msg || "").replace(/^Value error,\s*/i, "");
+        return field ? `${field.replace(/_/g, " ")}: ${msg}` : msg;
       })
       .join(" · ");
   }

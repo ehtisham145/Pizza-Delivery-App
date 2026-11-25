@@ -2,6 +2,7 @@ import { useState } from "react";
 import { menuApi } from "../../api/endpoints";
 import { PIZZA_CATEGORIES } from "../../constants";
 import { useAuth } from "../../context/AuthContext";
+import PizzaImage from "../../components/PizzaImage";
 import { Alert, Empty, Field, Message, Modal, PageHeader, Spinner, StatusBadge, money, useAction, useLoad } from "../../components/ui";
 
 // ── Pizzas ──────────────────────────────────────────────────────
@@ -120,7 +121,7 @@ function PizzasTab({ isAdmin }) {
                 <tr key={p.id}>
                   <td>
                     <div className="inline">
-                      <img className="thumb" src={p.image_url} alt="" onError={(e) => (e.currentTarget.style.visibility = "hidden")} />
+                      <PizzaImage pizza={p} width={120} sizes="40px" className="thumb" alt="" />
                       {p.name}
                     </div>
                   </td>

@@ -38,9 +38,9 @@ export default function AdminUsers() {
 
   return (
     <>
-      <PageHeader title="Users" subtitle="New sign-ups start inactive. Activate them so they can log in." />
+      <PageHeader title="Users" subtitle="Manage roles, and deactivate accounts that should no longer log in." />
       <Message message={message} onClose={() => setMessage(null)} />
-      {pendingCount > 0 && <Alert type="info">{pendingCount} user(s) waiting for activation.</Alert>}
+      {pendingCount > 0 && <Alert type="info">{pendingCount} account(s) are deactivated and can't log in.</Alert>}
 
       <div className="toolbar">
         <input className="search" placeholder="Search name or email…" value={search} onChange={(e) => setSearch(e.target.value)} />

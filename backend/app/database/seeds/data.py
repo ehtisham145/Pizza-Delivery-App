@@ -49,8 +49,26 @@ PIZZAS: list[dict] = [
 ]
 
 
+# Curated Unsplash photos (Unsplash License). Keep in sync with
+# frontend/src/lib/images.js, which also covers pizzas seeded before this change.
+_UNSPLASH = "https://images.unsplash.com/photo-{}?auto=format&fit=crop&w=800&q=80"
+PIZZA_PHOTOS: dict[str, str] = {
+    "Chicken Tikka": "1594007654729-407eedc4be65",
+    "Pepperoni Passion": "1628840042765-356cda07504e",
+    "Veggie Supreme": "1617470702892-e01504297e84",
+    "Fiery Jalapeno": "1613564834361-9436948817d1",
+    "Beef Delight": "1604382354936-07c5d9983bd3",
+    "Fajita Sensation": "1565299624946-b28f40a0ae38",
+    "Mushroom Magic": "1555072956-7758afb20e8f",
+    "Peri Peri Blast": "1601924582970-9238bcb495d9",
+    "Cheese Lover": "1620374645498-af6bd681a0bd",
+    "BBQ Chicken": "1588315029754-2dd089d39a1a",
+}
+_DEFAULT_PHOTO = "1513104890138-7c749659a591"
+
+
 def pizza_image_url(name: str) -> str:
-    return f"uploads/pizzas/{name.lower().replace(' ', '_')}.jpg"
+    return _UNSPLASH.format(PIZZA_PHOTOS.get(name, _DEFAULT_PHOTO))
 
 
 # ── Demo users (development only) ───────────────────────────────
@@ -73,7 +91,7 @@ def demo_users() -> list[dict]:
                 "email": f"{name.replace(' ', '').lower()}exp@gmail.com",
                 "phone_number": f"0300{1000000 + i}",
                 "role": "customer",
-                "is_active": False,
+                "is_active": True,
             }
         )
     return users

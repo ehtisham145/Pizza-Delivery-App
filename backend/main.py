@@ -1,5 +1,6 @@
 from app.database.init_db import create_tables
 from app.routes.Auth_Users.login_register import auth_router
+from app.routes.Auth_Users.password_reset import reset_router
 from app.routes.Auth_Users.profile import profile_router
 from app.routes.Menu.menu_routes import menu_router
 from app.routes.Cart.cart_routes import cart_router
@@ -27,6 +28,7 @@ add_exception_handlers(app)
 #================Including Router in main.py===============    
 
 app.include_router(auth_router,prefix='/auth',tags=['Authentication']) #--done
+app.include_router(reset_router,prefix='/auth',tags=['Authentication'])
 app.include_router(profile_router,prefix="/profile",tags=["Profile"])  #--done
 app.include_router(menu_router,prefix="/menu",tags=["Menu Management"]) #--done
 app.include_router(cart_router,prefix="/cart",tags=["Cart"]) #--done

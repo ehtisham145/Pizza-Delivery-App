@@ -12,9 +12,9 @@ class User(Base):
     full_name = Column(String(25), nullable=False)
     email = Column(String(80), unique=True, index=True,nullable=False)    
     password = Column(String(255), nullable=False)
-    phone_number = Column(String(11), nullable=False)    
+    phone_number = Column(String(20), nullable=False)  # international: + and up to 15 digits    
     role = Column(String(20), nullable=False, default="user")
-    is_active = Column(Boolean, default=False)
+    is_active = Column(Boolean, default=True)  # new accounts can log in immediately; admins can still deactivate
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))    
     updated_at   = Column(DateTime, default=lambda: datetime.now(timezone.utc),
                           onupdate=lambda: datetime.now(timezone.utc))

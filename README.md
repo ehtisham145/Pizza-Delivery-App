@@ -50,7 +50,7 @@ Customers browse the menu, fill a cart, save delivery addresses, place orders, p
 - Payments: list all and update status *(admin)*
 - Reviews: list and delete *(admin + staff)*
 
-> **New accounts start inactive.** An admin must activate a user on **Admin → Users** before that user can log in.
+> **New accounts are active immediately.** Admins can deactivate (block) or re-activate a user on **Admin → Users**.
 
 ---
 

@@ -87,6 +87,7 @@ def register_user(
         password=hashed_password,
         phone_number=user.phone_number,
         role="customer",
+        is_active=True,  # no admin approval needed; admins can deactivate later
     )
 
     # 5. Persist with robust error handling
@@ -153,10 +154,16 @@ def login(data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
     if not db_user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="This account is disabled. Please contact Admin.",
+            detail="This account has been deactivated. Please contact support.",
         )
 
-    # 5. Create tokens
+    # 5. Create and persist tokens
+    return issue_session(db, db_user)
+
+
+def issue_session(db: Session, db_user: User) -> dict:
+    """Create an access/refresh token pair for an active user and persist the
+    refresh token. Returns the UserLoginResponseSchema shape."""
     token_data = {"sub": db_user.email, "Role": db_user.role}
     access_token    = create_access_token(data=token_data)
     refresh_token_jwt = create_refresh_token(data=token_data)
@@ -164,7 +171,6 @@ def login(data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
     now        = datetime.utcnow()
     expires_at = now + timedelta(days=7)
 
-    # 6. Persist refresh token
     new_db_refresh_token = RefreshTokenModel(
         token=refresh_token_jwt,
         user_id=db_user.id,
@@ -185,7 +191,6 @@ def login(data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
             detail="Login failed — could not save session. Please try again.",
         )
 
-    # 7. Return response
     return {
         "access_token": access_token,
         "token_type": "bearer",

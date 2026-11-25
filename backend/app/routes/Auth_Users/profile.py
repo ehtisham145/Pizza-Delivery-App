@@ -104,4 +104,4 @@ def ChangePassword(data:ChangePasswordSchema,current_user:User=Depends(get_curre
     safe_commit(db)
     db.refresh(current_user)
 
-    return {"New Password : ": current_user.password}
+    return {"message": "Password changed successfully."}

@@ -1,5 +1,12 @@
 // Mirrors backend/app/utils/constant.py
 
+export const BRAND_NAME = "Ehtisham Pizza Services";
+export const BRAND_TAGLINE = "Hot, fresh pizza — delivered.";
+
+// Shown on menu cards. The backend has no prep-time field, so this is a single
+// store-wide estimate; change it here.
+export const ESTIMATED_DELIVERY = "25–35 min";
+
 // The backend has no "list sizes" endpoint. These IDs match the order in
 // which `python manage.py seed` inserts them (backend/app/database/seeds/data.py -> SIZES).
 export const PIZZA_SIZES = [

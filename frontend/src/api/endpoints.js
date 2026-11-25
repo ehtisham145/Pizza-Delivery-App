@@ -9,6 +9,9 @@ export const authApi = {
   login: (email, password) =>
     request("/auth/login", { method: "POST", form: { username: email, password }, auth: false }),
   logout: () => request("/auth/logout", { method: "POST" }),
+  forgotPassword: (email) => request("/auth/forgot-password", { method: "POST", body: { email }, auth: false }),
+  resetPassword: ({ token, new_password, confirm_password }) =>
+    request("/auth/reset-password", { method: "POST", body: { token, new_password, confirm_password }, auth: false }),
 };
 
 // ── Profile ─────────────────────────────────────────────────────

@@ -1,67 +1,166 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { ArrowRight, Lock, Mail, Phone, User } from "lucide-react";
 import { authApi } from "../api/endpoints";
-import { Alert, Field } from "../components/ui";
+import { useAuth } from "../context/AuthContext";
+import { Alert } from "../components/ui";
+import { HERO_IMAGES } from "../lib/images";
+import AuthLayout, { PasswordToggle } from "../components/auth/AuthLayout";
+import FloatField from "../components/auth/FloatField";
+import PasswordStrength from "../components/auth/PasswordStrength";
+import {
+  fieldErrorsFromApi,
+  normalizePhone,
+  validateConfirm,
+  validateEmail,
+  validateFullName,
+  validatePassword,
+  validatePhone,
+} from "../validation";
+
+const FIELDS = ["full_name", "email", "phone_number", "password", "confirm"];
+function validate(form) {
+  return {
+    full_name: validateFullName(form.full_name),
+    email: validateEmail(form.email),
+    phone_number: validatePhone(form.phone_number),
+    password: validatePassword(form.password),
+    confirm: validateConfirm(form.password, form.confirm),
+  };
+}
 
 export default function Register() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [form, setForm] = useState({ full_name: "", email: "", phone_number: "", password: "", confirm: "" });
-  const [error, setError] = useState("");
+  const [touched, setTouched] = useState({});
+  const [serverErrors, setServerErrors] = useState({});
+  const [formError, setFormError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const refs = useRef({});
 
-  const set = (key) => (e) => setForm({ ...form, [key]: e.target.value });
+  const clientErrors = validate(form);
+  // Show a field's error once the user has left it (or tried to submit).
+  const errorFor = (key) => serverErrors[key] || (touched[key] ? clientErrors[key] : "");
+
+  const bind = (key) => ({
+    id: `reg-${key}`,
+    name: key,
+    ref: (el) => (refs.current[key] = el),
+    value: form[key],
+    onChange: (e) => {
+      setForm((f) => ({ ...f, [key]: e.target.value }));
+      if (serverErrors[key]) setServerErrors((s) => ({ ...s, [key]: "" }));
+    },
+    onBlur: () => setTouched((t) => ({ ...t, [key]: true })),
+    error: errorFor(key),
+    valid: Boolean(touched[key] && !errorFor(key) && form[key]),
+  });
 
   const submit = async (e) => {
     e.preventDefault();
-    if (form.password !== form.confirm) {
-      setError("Passwords do not match.");
+    setFormError("");
+    setTouched(Object.fromEntries(FIELDS.map((k) => [k, true])));
+
+    const firstInvalid = FIELDS.find((k) => clientErrors[k]);
+    if (firstInvalid) {
+      refs.current[firstInvalid]?.focus();
       return;
     }
+
     setBusy(true);
-    setError("");
     try {
-      const { confirm, ...data } = form;
-      await authApi.register({ ...data, full_name: data.full_name.trim(), email: data.email.trim() });
-      navigate("/login", { state: { registered: true } });
+      await authApi.register({
+        full_name: form.full_name.trim(),
+        email: form.email.trim(),
+        phone_number: normalizePhone(form.phone_number),
+        password: form.password,
+      });
+      // Accounts are active straight away, so sign the user in and take them to the menu.
+      try {
+        await login(form.email.trim(), form.password);
+        navigate("/menu", { replace: true });
+      } catch {
+        navigate("/login", { state: { registered: true, email: form.email.trim() } });
+      }
     } catch (err) {
-      setError(err.message);
+      const fields = fieldErrorsFromApi(err);
+      if (/already registered/i.test(err.message)) fields.email = "An account with this email already exists. Try logging in.";
+      const firstServer = FIELDS.find((k) => fields[k]);
+      if (firstServer) {
+        setServerErrors(fields);
+        refs.current[firstServer]?.focus();
+      } else {
+        setFormError(err.message);
+      }
     } finally {
       setBusy(false);
     }
   };
 
+
   return (
-    <div className="auth-page">
-      <form className="auth-card" onSubmit={submit}>
-        <div className="auth-brand">🍕</div>
-        <h1>Create account</h1>
-        <p className="muted">Sign up to start ordering.</p>
+    <AuthLayout image={HERO_IMAGES.register} title="Create your account" subtitle="Join in a minute, then order in seconds.">
+      <form onSubmit={submit} noValidate>
+        <Alert type="error" onClose={() => setFormError("")}>
+          {formError}
+        </Alert>
 
-        <Alert type="error">{error}</Alert>
+        <FloatField {...bind("full_name")} label="Full name" icon={User} hint="5–20 characters" type="text" autoComplete="name" maxLength={20} />
+        <FloatField {...bind("email")} label="Email address" icon={Mail} type="email" autoComplete="email" inputMode="email" />
+        <FloatField
+          {...bind("phone_number")}
+         
+          label="Mobile number"
+          icon={Phone}
+          hint="Any country — include the country code, e.g. +44 7911 123456"
+          type="tel"
+          autoComplete="tel"
+          inputMode="tel"
+          maxLength={24}
+        />
+        <FloatField
+          {...bind("password")}
+         
+          label="Password"
+          icon={Lock}
+          type={showPassword ? "text" : "password"}
+          autoComplete="new-password"
+          className="mb-2"
+          trailing={<PasswordToggle shown={showPassword} onToggle={() => setShowPassword((s) => !s)} />}
+        />
 
-        <Field label="Full name" hint="5–20 characters">
-          <input required minLength={5} maxLength={20} value={form.full_name} onChange={set("full_name")} />
-        </Field>
-        <Field label="Email">
-          <input type="email" required autoComplete="email" value={form.email} onChange={set("email")} />
-        </Field>
-        <Field label="Phone number" hint="Pakistani mobile, e.g. 03001234567">
-          <input required inputMode="tel" placeholder="03001234567" value={form.phone_number} onChange={set("phone_number")} />
-        </Field>
-        <Field label="Password" hint="8+ chars with upper, lower, number and one of @$!%*?&">
-          <input type="password" required minLength={8} autoComplete="new-password" value={form.password} onChange={set("password")} />
-        </Field>
-        <Field label="Confirm password">
-          <input type="password" required autoComplete="new-password" value={form.confirm} onChange={set("confirm")} />
-        </Field>
+        <PasswordStrength value={form.password} />
 
-        <button className="btn btn-primary btn-block" disabled={busy}>
-          {busy ? "Creating account…" : "Create account"}
+        <FloatField
+          {...bind("confirm")}
+         
+          label="Confirm password"
+          icon={Lock}
+          type={showPassword ? "text" : "password"}
+          autoComplete="new-password"
+        />
+
+        <button className="btn btn-primary btn-block mt-2 h-12 text-base" disabled={busy}>
+          {busy ? (
+            <>
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" /> Creating account…
+            </>
+          ) : (
+            <>
+              Create account <ArrowRight className="h-5 w-5" aria-hidden="true" />
+            </>
+          )}
         </button>
-        <p className="auth-switch">
-          Already registered? <Link to="/login">Log in</Link>
-        </p>
       </form>
-    </div>
+
+      <p className="mt-8 text-center text-sm text-muted">
+        Already registered?{" "}
+        <Link to="/login" className="font-semibold">
+          Log in
+        </Link>
+      </p>
+    </AuthLayout>
   );
 }

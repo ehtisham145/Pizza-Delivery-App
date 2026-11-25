@@ -31,7 +31,7 @@ function AddressForm({ initial, onSubmit, busy }) {
           <input required minLength={3} maxLength={100} value={form.city} onChange={set("city")} placeholder="Islamabad" />
         </Field>
         <Field label="ZIP code" hint="5 digits">
-          <input required pattern="\d{5}" inputMode="numeric" value={form.zip_code} onChange={set("zip_code")} placeholder="44000" />
+          <input required pattern="\d{5}" title="Enter a 5-digit ZIP code, like 44000." inputMode="numeric" maxLength={5} value={form.zip_code} onChange={set("zip_code")} placeholder="44000" />
         </Field>
       </div>
       <label className="checkbox">

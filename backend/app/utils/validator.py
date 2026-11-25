@@ -22,21 +22,25 @@ def validate_password_strength(v: str) -> str:
 # ----------------- REUSABLE PHONE VALIDATOR -----------------
 def validate_phone_no(v: str) -> str:
     """
-    Reusable logic for Pakistani phone number validation.
-    Supports formats: 03xxxxxxxxx, 923xxxxxxxxx, +923xxxxxxxxx.
+    Phone number validation for any country.
+    Accepts an optional leading "+" (or "00" international prefix) followed by
+    7–15 digits (the E.164 maximum). Spaces, dashes, dots and brackets are
+    stripped first, e.g. "+44 7911 123456", "(555) 123-4567", "03001234567".
     """
-    # 1. Clean the string (Remove whitespaces, dashes, or brackets)
-    clean_number = re.sub(r"[\s\-\(\)]", "", v)
-    
-    # 2. Regex for Pakistani mobile formats
-    pk_pattern = r"^(?:\+92|92|0)?3\d{9}$"
-    
-    if not re.match(pk_pattern, clean_number):
+    # 1. Clean the string (remove whitespace, dashes, dots, brackets)
+    clean_number = re.sub(r"[\s\-\.\(\)]", "", v or "")
+
+    # 2. "00" international prefix -> "+"
+    if clean_number.startswith("00"):
+        clean_number = "+" + clean_number[2:]
+
+    # 3. Optional "+" then 7–15 digits
+    if not re.fullmatch(r"\+?\d{7,15}", clean_number):
         raise ValueError(
-            "Invalid phone number. Please use a valid format "
-            "(e.g., 03001234567 or +923001234567)."
+            "Invalid phone number. Use 7–15 digits, optionally starting with + "
+            "and your country code (e.g. +14155552671 or 03001234567)."
         )
-    
+
     return clean_number
 
 def validate_uuid(id_str: str, entity_name: str = "ID"):
